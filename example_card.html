@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Carte Pokémon - Référence visuelle</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@400;700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #E0E0E5;
+    padding: 40px;
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+  }
+  .card {
+    width: 360px; height: 505px;
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    border: 2px solid #F5F0E1;
+    overflow: hidden;
+    position: relative;
+  }
+  .card-inner {
+    width: 100%; height: 100%;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    padding: 7px 11px;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 3px;
+  }
+  .stage-badge {
+    background: linear-gradient(180deg, #FFFFFF 0%, #DCD4C0 100%);
+    border-radius: 2px;
+    padding: 2px 5px;
+    font-weight: 900;
+    font-size: 7px;
+    letter-spacing: 0.3px;
+    color: #2A1F0F;
+    border: 1px solid rgba(0,0,0,0.2);
+    flex-shrink: 0;
+  }
+  .name {
+    font-weight: 900;
+    font-size: 21px;
+    flex: 1;
+    margin-left: 4px;
+    letter-spacing: -0.3px;
+  }
+  .hp-block {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .hp-label { font-size: 7px; font-weight: 700; }
+  .hp-value { font-size: 19px; font-weight: 900; letter-spacing: -0.5px; }
+  .type-circle {
+    width: 21px; height: 21px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: white;
+    border: 1px solid rgba(0,0,0,0.2);
+    box-shadow: inset -1px -1px 2px rgba(0,0,0,0.25), inset 1px 1px 2px rgba(255,255,255,0.3);
+  }
+  .evolves-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 2px;
+    padding-left: 4px;
+  }
+  .pre-evo-circle {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #F5F0E1 0%, #C9C2AC 100%);
+    border: 1px solid rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5px;
+    color: #5A4F3A;
+    font-weight: 700;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .evolves-from {
+    background: linear-gradient(180deg, #F5F0E1 0%, #DCD4C0 100%);
+    border: 1px solid rgba(0,0,0,0.2);
+    padding: 1px 8px;
+    border-radius: 2px;
+    font-size: 7px;
+    font-weight: 700;
+    color: #2A1F0F;
+    flex: 1;
+  }
+  .artwork {
+    border: 2px solid #F5F0E1;
+    background: linear-gradient(135deg, #F0EAD7 0%, #D9D2BB 100%);
+    height: 220px;
+    margin: 3px 0 0 0;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    position: relative;
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.12);
+  }
+  .artwork::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(0,0,0,0.08);
+    pointer-events: none;
+  }
+  .artwork-placeholder {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    text-align: center;
+  }
+  .artwork-subtitle {
+    font-style: italic;
+    font-size: 9px;
+    color: #5A4F3A;
+    margin-top: 6px;
+    text-align: center;
+  }
+  .pokedex-bar {
+    background: linear-gradient(180deg, #F5F0E1 0%, #DCD4C0 100%);
+    border: 1px solid rgba(0,0,0,0.15);
+    border-top: none;
+    padding: 2px 6px;
+    font-size: 6px;
+    font-weight: 700;
+    color: #2A1F0F;
+    text-align: center;
+  }
+  .attack-section {
+    flex: 1;
+    padding: 10px 4px 3px 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .attack-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .attack-cost {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .energy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 19px; height: 19px;
+    border-radius: 50%;
+    font-size: 10px;
+    margin-right: 2px;
+    box-shadow: inset -1px -1px 2px rgba(0,0,0,0.25), inset 1px 1px 2px rgba(255,255,255,0.3);
+    border: 1px solid rgba(0,0,0,0.15);
+    line-height: 1;
+  }
+  .attack-name {
+    font-size: 13px;
+    font-weight: 900;
+    flex: 1;
+    text-align: center;
+    letter-spacing: -0.2px;
+  }
+  .attack-damage {
+    font-size: 18px;
+    font-weight: 900;
+    text-align: right;
+    flex-shrink: 0;
+    letter-spacing: -0.5px;
+  }
+  .attack-text {
+    font-size: 6.5px;
+    margin-top: 3px;
+    line-height: 1.35;
+    padding: 3px 7px;
+    font-style: italic;
+    background: rgba(255, 250, 235, 0.35);
+    border-radius: 3px;
+  }
+  .bottom-strip {
+    display: flex;
+    gap: 6px;
+    padding: 2px 4px;
+    margin-top: auto;
+  }
+  .stat-box {
+    flex: 1;
+    background: linear-gradient(180deg, #F5F0E1 0%, #DCD4C0 100%);
+    border-radius: 7px;
+    padding: 2px 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 6px;
+    color: #2A1F0F;
+    border: 1px solid rgba(0,0,0,0.15);
+    min-height: 14px;
+  }
+  .stat-label { font-style: italic; font-weight: 600; }
+  .stat-value { font-weight: 900; font-size: 7px; }
+  .footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 3px 6px 0 6px;
+  }
+  .footer-left {
+    flex-shrink: 0;
+    font-size: 5.5px;
+    font-style: italic;
+    font-weight: 500;
+  }
+  .footer-left .illus { display: block; }
+  .footer-left .rarity { margin-top: 1px; letter-spacing: 2px; font-size: 6.5px; }
+  .flavor {
+    font-size: 5.7px;
+    text-align: right;
+    flex: 1;
+    line-height: 1.4;
+    font-style: italic;
+    max-width: 240px;
+    background: rgba(255, 250, 235, 0.4);
+    padding: 3px 5px;
+    border-radius: 3px;
+  }
+
+  /* ====================== */
+  /* TYPE VARIANTS          */
+  /* ====================== */
+
+  .type-fighting { background: linear-gradient(180deg, #E8A547 0%, #D88B2A 35%, #B97020 65%, #8E5418 100%); color: #1F1A0F; }
+  .type-fighting .energy-fighting, .type-fighting .type-circle { background: #E84A28; color: #FFF; }
+  .type-fighting .artwork-placeholder { color: #E84A28; }
+
+  .type-fire { background: linear-gradient(180deg, #F0773A 0%, #E1591E 35%, #BC4012 65%, #8A2E0C 100%); color: #1F1A0F; }
+  .type-fire .energy-fire, .type-fire .type-circle { background: #E84A28; color: #FFF; }
+  .type-fire .artwork-placeholder { color: #E84A28; }
+
+  .type-water { background: linear-gradient(180deg, #5BA8E1 0%, #3A8AC8 35%, #2469A3 65%, #154874 100%); color: #1F1A0F; }
+  .type-water .energy-water, .type-water .type-circle { background: #3589C2; color: #FFF; }
+  .type-water .artwork-placeholder { color: #3589C2; }
+
+  .type-lightning { background: linear-gradient(180deg, #F5D440 0%, #EBC222 35%, #C99B0A 65%, #8E6D04 100%); color: #1F1A0F; }
+  .type-lightning .energy-lightning, .type-lightning .type-circle { background: #F8C81E; color: #3A2D08; }
+  .type-lightning .artwork-placeholder { color: #C99B0A; }
+
+  .type-grass { background: linear-gradient(180deg, #92C84A 0%, #76AE2E 35%, #5A8E1E 65%, #3D6310 100%); color: #1F1A0F; }
+  .type-grass .energy-grass, .type-grass .type-circle { background: #3FAF3A; color: #FFF; }
+  .type-grass .artwork-placeholder { color: #3FAF3A; }
+
+  .type-psychic { background: linear-gradient(180deg, #B97DC4 0%, #9F5BAB 35%, #7E4089 65%, #582C61 100%); color: #1F1A0F; }
+  .type-psychic .energy-psychic, .type-psychic .type-circle { background: #A35BAA; color: #FFF; }
+  .type-psychic .artwork-placeholder { color: #A35BAA; }
+
+  .type-darkness { background: linear-gradient(180deg, #3D6A7A 0%, #28505C 35%, #1A3C46 65%, #0F2730 100%); color: #FFFFFF; }
+  .type-darkness .energy-darkness, .type-darkness .type-circle { background: #1F3640; color: #FFF; }
+  .type-darkness .artwork-placeholder { color: #2A4A5A; }
+
+  .type-colorless { background: linear-gradient(180deg, #F2EBE0 0%, #E0D8CB 35%, #C9C0B0 65%, #A89F8E 100%); color: #1F1A0F; }
+  .type-colorless .energy-colorless, .type-colorless .type-circle { background: #9FA09F; color: #FFF; }
+  .type-colorless .artwork-placeholder { color: #9FA09F; }
+
+  .type-fairy { background: linear-gradient(180deg, #F2A8C9 0%, #E68AB3 35%, #C76A95 65%, #8E4868 100%); color: #1F1A0F; }
+  .type-fairy .energy-fairy, .type-fairy .type-circle { background: #E96AAA; color: #FFF; }
+  .type-fairy .artwork-placeholder { color: #E96AAA; }
+
+  .type-metal { background: linear-gradient(180deg, #B5B8BE 0%, #9498A0 35%, #75797F 65%, #4F535A 100%); color: #1F1A0F; }
+  .type-metal .energy-metal, .type-metal .type-circle { background: #9CA0A8; color: #FFF; }
+  .type-metal .artwork-placeholder { color: #75797F; }
+
+  /* Energy icon backgrounds (when used independently from card type) */
+  .energy-fighting { background: #E84A28; color: #FFF; }
+  .energy-fire { background: #E84A28; color: #FFF; }
+  .energy-water { background: #3589C2; color: #FFF; }
+  .energy-lightning { background: #F8C81E; color: #3A2D08; }
+  .energy-grass { background: #3FAF3A; color: #FFF; }
+  .energy-psychic { background: #A35BAA; color: #FFF; }
+  .energy-darkness { background: #1F3640; color: #FFF; }
+  .energy-colorless { background: #9FA09F; color: #FFF; }
+  .energy-fairy { background: #E96AAA; color: #FFF; }
+  .energy-metal { background: #9CA0A8; color: #FFF; }
+</style>
+</head>
+<body>
+
+<!-- Example: a Fighting type card (Nicogneur) -->
+<div class="card type-fighting">
+  <div class="card-inner">
+    <div class="header">
+      <div class="stage-badge">STAGE 1</div>
+      <div class="name">Nicogneur</div>
+      <div class="hp-block">
+        <span class="hp-label">HP</span>
+        <span class="hp-value">100</span>
+      </div>
+      <div class="type-circle">✊</div>
+    </div>
+    <div class="evolves-bar">
+      <div class="pre-evo-circle">Machop</div>
+      <div class="evolves-from">Evolves from Machop</div>
+    </div>
+    <div class="artwork">
+      <div class="artwork-placeholder">[ MONTAGE PHOTO ]</div>
+      <div class="artwork-subtitle">Machoke<br>+ Nico</div>
+    </div>
+    <div class="pokedex-bar">NO. 0067 Crossfit Pokémon · HT: 5'09" · WT: 85 kg</div>
+    <div class="attack-section">
+      <div class="attack-row">
+        <div class="attack-cost">
+          <span class="energy energy-fighting">✊</span>
+          <span class="energy energy-fighting">✊</span>
+          <span class="energy energy-colorless">✦</span>
+        </div>
+        <div class="attack-name">WOD du Dimanche</div>
+        <div class="attack-damage">80</div>
+      </div>
+      <div class="attack-text">Inflige 20 dégâts de plus pour chaque shaker de whey attaché.</div>
+    </div>
+    <div class="bottom-strip">
+      <div class="stat-box">
+        <span class="stat-label">weakness</span>
+        <span class="energy energy-psychic" style="width:12px;height:12px;font-size:7px;">👁</span>
+        <span class="stat-value">+20</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">retreat</span>
+        <span class="energy energy-colorless" style="width:11px;height:11px;font-size:6px;">✦</span>
+        <span class="energy energy-colorless" style="width:11px;height:11px;font-size:6px;">✦</span>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="footer-left">
+        <span class="illus">Illus. EVJFG Squad</span>
+        <span class="rarity">◇ ◇</span>
+      </div>
+      <div class="flavor">Il s'est chauffé sur les sauces piquantes ET sur le CrossFit la même année. Sa whey n'est jamais bien loin.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Example: Psychic type (Alakaclaire) -->
+<div class="card type-psychic">
+  <div class="card-inner">
+    <div class="header">
+      <div class="stage-badge">STAGE 2</div>
+      <div class="name">Alakaclaire</div>
+      <div class="hp-block">
+        <span class="hp-label">HP</span>
+        <span class="hp-value">130</span>
+      </div>
+      <div class="type-circle">👁</div>
+    </div>
+    <div class="evolves-bar">
+      <div class="pre-evo-circle">Kadabra</div>
+      <div class="evolves-from">Evolves from Kadabra</div>
+    </div>
+    <div class="artwork">
+      <div class="artwork-placeholder">[ MONTAGE PHOTO ]</div>
+      <div class="artwork-subtitle">Alakazam<br>+ Claire</div>
+    </div>
+    <div class="pokedex-bar">NO. 0065 Stratège Pokémon · HT: 4'11" · WT: 48 kg</div>
+    <div class="attack-section">
+      <div class="attack-row">
+        <div class="attack-cost">
+          <span class="energy energy-psychic">👁</span>
+          <span class="energy energy-colorless">✦</span>
+          <span class="energy energy-colorless">✦</span>
+        </div>
+        <div class="attack-name">Calcul Mental</div>
+        <div class="attack-damage">60</div>
+      </div>
+      <div class="attack-text">Anticipe 3 coups d'avance. Connaît tous les gossips avant tout le monde. +30 si jeu de société en cours.</div>
+    </div>
+    <div class="bottom-strip">
+      <div class="stat-box">
+        <span class="stat-label">weakness</span>
+        <span class="energy energy-psychic" style="width:12px;height:12px;font-size:7px;">👁</span>
+        <span class="stat-value">+20</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">retreat</span>
+        <span class="energy energy-colorless" style="width:11px;height:11px;font-size:6px;">✦</span>
+        <span class="energy energy-colorless" style="width:11px;height:11px;font-size:6px;">✦</span>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="footer-left">
+        <span class="illus">Illus. EVJFG Squad</span>
+        <span class="rarity">◇ ◇</span>
+      </div>
+      <div class="flavor">QI redoutable, mémoire des ragots infaillible. À Noël, elle a déjà gagné le Time's Up avant la 2e manche.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Example: Grass type (Inseclairteur) -->
+<div class="card type-grass">
+  <div class="card-inner">
+    <div class="header">
+      <div class="stage-badge">BASIC</div>
+      <div class="name">Inseclairteur</div>
+      <div class="hp-block">
+        <span class="hp-label">HP</span>
+        <span class="hp-value">90</span>
+      </div>
+      <div class="type-circle">🌿</div>
+    </div>
+    <div class="artwork">
+      <div class="artwork-placeholder">[ MONTAGE PHOTO ]</div>
+      <div class="artwork-subtitle">Scyther<br>+ Claire</div>
+    </div>
+    <div class="pokedex-bar">NO. 0123 Curiosité Pokémon · HT: 4'11" · WT: 56 kg</div>
+    <div class="attack-section">
+      <div class="attack-row">
+        <div class="attack-cost">
+          <span class="energy energy-grass">🌿</span>
+          <span class="energy energy-colorless">✦</span>
+        </div>
+        <div class="attack-name">Vivarium Vivant</div>
+        <div class="attack-damage">50</div>
+      </div>
+      <div class="attack-text">Pose un scarabée vivant sur le banc adverse. L'invité est désormais Confus.</div>
+    </div>
+    <div class="bottom-strip">
+      <div class="stat-box">
+        <span class="stat-label">weakness</span>
+        <span class="energy energy-fire" style="width:12px;height:12px;font-size:7px;">🔥</span>
+        <span class="stat-value">+20</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">retreat</span>
+        <span class="energy energy-colorless" style="width:11px;height:11px;font-size:6px;">✦</span>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="footer-left">
+        <span class="illus">Illus. EVJFG Squad</span>
+        <span class="rarity">◇ ◇</span>
+      </div>
+      <div class="flavor">Collectionne le vivant comme d'autres les timbres. Ses toilettes sont un cabinet de curiosités.</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

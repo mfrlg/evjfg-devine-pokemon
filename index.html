@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Devine le Pokémon — EVJFG Claire & Nico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFFFF;
+  --type-bg: #FFFFFF;
+  --type-deep: #DC0A2D;
+  --ink: #1A1A1F;
+  --ink-soft: #4A4A52;
+  --shadow-sm: 0 2px 6px rgba(0,0,0,0.08);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.14);
+  --shadow-lg: 0 18px 48px rgba(0,0,0,0.22);
+  --radius: 14px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+  font-family: 'Roboto', system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  background: var(--type-bg);
+  transition: background-color 0.9s var(--ease);
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+button:focus-visible { outline: 3px solid #5B8FFE; outline-offset: 3px; }
+img { display: block; max-width: 100%; }
+
+/* ============ VIEWS ============ */
+.view {
+  position: fixed; inset: 0;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.4s var(--ease);
+}
+.view.active { display: block; opacity: 1; }
+.view.fading { opacity: 0; pointer-events: none; }
+
+/* ============ HOME ============ */
+.view-home {
+  background: #FFFFFF;
+}
+.pokeballs {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.pokeball-shape {
+  position: absolute;
+  opacity: 0.06;
+  color: #1A1A1F;
+}
+.home-content {
+  position: absolute; inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  z-index: 2;
+}
+.home-title {
+  font-family: 'Anton', 'Impact', sans-serif;
+  font-size: clamp(48px, 8vw, 112px);
+  letter-spacing: 2px;
+  text-align: center;
+  line-height: 1.22;
+  color: #18181D;
+  text-transform: uppercase;
+}
+.home-title small {
+  display: block;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  font-size: clamp(13px, 1.1vw, 16px);
+  letter-spacing: 6px;
+  color: #8B8B92;
+  margin-top: 28px;
+  text-transform: uppercase;
+}
+.start-btn {
+  position: relative;
+  z-index: 3;
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(20px, 1.6vw, 26px);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  background: #DC0A2D;
+  padding: 22px 80px;
+  border-radius: 999px;
+  box-shadow: 0 10px 32px rgba(220,10,45,0.35), inset 0 -3px 0 rgba(0,0,0,0.12);
+  transition: transform 0.15s var(--ease), box-shadow 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+.start-btn:hover { transform: scale(1.04); }
+.start-btn:active { transform: scale(0.97); }
+
+/* Expanding state: button morphs into the full-screen game background */
+.start-btn.expanding {
+  position: fixed;
+  top: 50%; left: 50%;
+  z-index: 50;
+  padding: 0;
+  width: 220vmax;
+  height: 220vmax;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  color: transparent;
+  box-shadow: none;
+  transition: width 0.85s var(--ease), height 0.85s var(--ease), background-color 0.85s var(--ease), color 0.2s linear;
+  pointer-events: none;
+}
+
+/* ============ GAME ============ */
+.view-game { background: transparent; }
+
+.nav-bar {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 28px 36px;
+  z-index: 10;
+}
+.nav-btn {
+  width: 52px; height: 52px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.85);
+  color: #1A1A1F;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s var(--ease), background 0.2s var(--ease), opacity 0.2s var(--ease);
+}
+.nav-btn:hover { background: #FFFFFF; transform: scale(1.06); }
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.nav-btn svg { width: 22px; height: 22px; }
+
+.stage {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  pointer-events: none;
+}
+/* Stage when displaying the lone silhouette / revealed image */
+.silhouette-stage {
+  width: 400px; height: 400px;
+  margin-top: -30px;
+}
+.silhouette-stage img,
+.silhouette-stage .placeholder-silhouette,
+.silhouette-stage .placeholder-revealed {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 30px rgba(0,0,0,0.25));
+}
+/* During morph: full coverage so the image lands edge-to-edge in the artwork zone */
+.silhouette-stage.morphing img {
+  object-fit: cover;
+  border-radius: 0;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.18));
+}
+.silhouette-stage.bounce {
+  animation: idle-bounce 2.4s ease-in-out infinite;
+}
+.silhouette-stage.enter {
+  animation: stage-enter 0.85s var(--ease-spring) both;
+}
+.silhouette-stage.exit {
+  animation: stage-exit 0.5s var(--ease) both;
+}
+.silhouette-stage.reveal-pop {
+  animation: reveal-pop 0.6s var(--ease-spring) both;
+}
+.silhouette-stage.into-card {
+  animation: into-card 0.65s var(--ease) forwards;
+}
+
+/* Card stage (centered card display after reveal) */
+.card-stage {
+  display: none;
+  pointer-events: auto;
+}
+.card-stage.show { display: flex; }
+.card-stage.enter { animation: card-enter 0.65s var(--ease-spring) both; }
+.card-stage.exit { animation: card-exit 0.5s var(--ease) both; }
+.card-stage.bounce { animation: idle-bounce-card 2.4s ease-in-out infinite; }
+
+/* Hints */
+.hints {
+  position: absolute;
+  left: 50%;
+  bottom: 180px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(560px, 70vw);
+  z-index: 5;
+}
+.hint {
+  background: rgba(255,255,255,0.95);
+  color: #1A1A1F;
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: hint-in 0.45s var(--ease-spring) both;
+}
+.hint-num {
+  width: 28px; height: 28px;
+  border-radius: 999px;
+  background: #1A1A1F;
+  color: #FFF;
+  font-weight: 900;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Action bar */
+.actions {
+  position: absolute;
+  left: 50%;
+  bottom: 60px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 18px;
+  z-index: 6;
+}
+.btn-action {
+  font-family: 'Anton', sans-serif;
+  font-size: 16px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #1A1A1F;
+  background: #FFFFFF;
+  padding: 16px 42px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.15s var(--ease), box-shadow 0.2s var(--ease), opacity 0.4s var(--ease);
+}
+.btn-action:hover { transform: translateY(-2px) scale(1.03); box-shadow: var(--shadow-lg); }
+.btn-action:active { transform: translateY(0) scale(0.98); }
+.btn-action.primary {
+  background: #1A1A1F;
+  color: #FFFFFF;
+}
+.btn-action.hidden {
+  opacity: 0;
+  pointer-events: none;
+  display: none;
+}
+.btn-action.exit-up {
+  animation: btn-exit-up 0.45s var(--ease) both;
+}
+
+/* ============ POKEMON CARD (inlined from card_template / example_card) ============ */
+.card {
+  width: 420px; height: 590px;
+  border-radius: 18px;
+  padding: 10px;
+  box-shadow: 0 18px 42px rgba(0,0,0,0.34);
+  border: 2px solid #F5F0E1;
+  overflow: hidden;
+  position: relative;
+}
+.card-inner {
+  width: 100%; height: 100%;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  padding: 9px 13px;
+}
+.card .header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.stage-badge {
+  background: linear-gradient(180deg, #FFFFFF 0%, #DCD4C0 100%);
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-weight: 900;
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  color: #2A1F0F;
+  border: 1px solid rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+.name { font-weight: 900; font-size: 24px; flex: 1; margin-left: 5px; letter-spacing: -0.3px; }
+.hp-block { display: flex; align-items: center; gap: 4px; }
+.hp-label { font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
+.hp-value { font-size: 23px; font-weight: 900; letter-spacing: -0.5px; }
+.type-circle {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: white;
+  border: 1px solid rgba(0,0,0,0.2);
+  box-shadow: inset -1px -1px 2px rgba(0,0,0,0.25), inset 1px 1px 2px rgba(255,255,255,0.3);
+}
+.evolves-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; padding-left: 4px; }
+.pre-evo-circle {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(180deg, #F5F0E1 0%, #C9C2AC 100%);
+  border: 1px solid rgba(0,0,0,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7px; color: #5A4F3A; font-weight: 700; text-align: center;
+  flex-shrink: 0;
+}
+.evolves-from {
+  background: linear-gradient(180deg, #F5F0E1 0%, #DCD4C0 100%);
+  border: 1px solid rgba(0,0,0,0.2);
+  padding: 2px 10px; border-radius: 3px;
+  font-size: 10px; font-weight: 700; color: #2A1F0F; flex: 1;
+}
+.artwork {
+  border: 2px solid #F5F0E1;
+  background: linear-gradient(135deg, #F0EAD7 0%, #D9D2BB 100%);
+  height: 250px;
+  margin: 4px 0 0 0;
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  position: relative;
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.12);
+  overflow: hidden;
+}
+.artwork::before {
+  content: ''; position: absolute; inset: 3px;
+  border: 1px solid rgba(0,0,0,0.08); pointer-events: none; z-index: 2;
+}
+.artwork img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.artwork-placeholder { font-size: 13px; font-weight: 900; letter-spacing: 1.5px; text-align: center; }
+.artwork-subtitle { font-style: italic; font-size: 11px; color: #5A4F3A; margin-top: 7px; text-align: center; }
+.pokedex-bar {
+  background: linear-gradient(180deg, #F5F0E1 0%, #DCD4C0 100%);
+  border: 1px solid rgba(0,0,0,0.15);
+  border-top: none;
+  padding: 3px 8px;
+  font-size: 9px; font-weight: 700; color: #2A1F0F; text-align: center;
+}
+.attack-section { flex: 1; padding: 12px 5px 4px 5px; display: flex; flex-direction: column; justify-content: center; }
+.attack-row { display: flex; align-items: center; gap: 6px; }
+.attack-cost { display: flex; align-items: center; flex-shrink: 0; }
+.energy {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  font-size: 12px; margin-right: 3px;
+  box-shadow: inset -1px -1px 2px rgba(0,0,0,0.25), inset 1px 1px 2px rgba(255,255,255,0.3);
+  border: 1px solid rgba(0,0,0,0.15); line-height: 1;
+}
+.attack-name { font-size: 19px; font-weight: 900; flex: 1; text-align: center; letter-spacing: -0.2px; }
+.attack-damage { font-size: 26px; font-weight: 900; text-align: right; flex-shrink: 0; letter-spacing: -0.5px; }
+.attack-text {
+  font-size: 12px;
+  margin-top: 6px;
+  line-height: 1.4;
+  padding: 6px 12px;
+  font-style: italic;
+  background: rgba(255, 250, 235, 0.35);
+  border-radius: 4px;
+}
+.bottom-strip { display: flex; gap: 8px; padding: 3px 5px; margin-top: auto; }
+.stat-box {
+  flex: 1;
+  background: linear-gradient(180deg, #F5F0E1 0%, #DCD4C0 100%);
+  border-radius: 9px;
+  padding: 4px 8px;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  font-size: 9px; color: #2A1F0F;
+  border: 1px solid rgba(0,0,0,0.15);
+  min-height: 22px;
+}
+.stat-label { font-style: italic; font-weight: 600; }
+.stat-value { font-weight: 900; font-size: 11px; }
+.footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 5px 8px 0 8px; }
+.footer-left { flex-shrink: 0; font-size: 8px; font-style: italic; font-weight: 500; }
+.footer-left .illus { display: block; }
+.footer-left .rarity { margin-top: 2px; letter-spacing: 2.5px; font-size: 10px; }
+.flavor {
+  font-size: 9px; text-align: right; flex: 1; line-height: 1.4; font-style: italic;
+  max-width: 280px;
+  background: rgba(255, 250, 235, 0.4);
+  padding: 4px 7px; border-radius: 4px;
+}
+
+/* Type gradients */
+.type-fighting   { background: linear-gradient(180deg, #E8A547 0%, #D88B2A 35%, #B97020 65%, #8E5418 100%); color: #1F1A0F; }
+.type-fighting .energy-fighting, .type-fighting .type-circle { background: #E84A28; color: #FFF; }
+.type-fighting .artwork-placeholder { color: #E84A28; }
+.type-fire       { background: linear-gradient(180deg, #F0773A 0%, #E1591E 35%, #BC4012 65%, #8A2E0C 100%); color: #1F1A0F; }
+.type-fire .energy-fire, .type-fire .type-circle { background: #E84A28; color: #FFF; }
+.type-fire .artwork-placeholder { color: #E84A28; }
+.type-water      { background: linear-gradient(180deg, #5BA8E1 0%, #3A8AC8 35%, #2469A3 65%, #154874 100%); color: #1F1A0F; }
+.type-water .energy-water, .type-water .type-circle { background: #3589C2; color: #FFF; }
+.type-water .artwork-placeholder { color: #3589C2; }
+.type-lightning  { background: linear-gradient(180deg, #F5D440 0%, #EBC222 35%, #C99B0A 65%, #8E6D04 100%); color: #1F1A0F; }
+.type-lightning .energy-lightning, .type-lightning .type-circle { background: #F8C81E; color: #3A2D08; }
+.type-lightning .artwork-placeholder { color: #C99B0A; }
+.type-grass      { background: linear-gradient(180deg, #92C84A 0%, #76AE2E 35%, #5A8E1E 65%, #3D6310 100%); color: #1F1A0F; }
+.type-grass .energy-grass, .type-grass .type-circle { background: #3FAF3A; color: #FFF; }
+.type-grass .artwork-placeholder { color: #3FAF3A; }
+.type-psychic    { background: linear-gradient(180deg, #B97DC4 0%, #9F5BAB 35%, #7E4089 65%, #582C61 100%); color: #1F1A0F; }
+.type-psychic .energy-psychic, .type-psychic .type-circle { background: #A35BAA; color: #FFF; }
+.type-psychic .artwork-placeholder { color: #A35BAA; }
+.type-darkness   { background: linear-gradient(180deg, #3D6A7A 0%, #28505C 35%, #1A3C46 65%, #0F2730 100%); color: #FFFFFF; }
+.type-darkness .energy-darkness, .type-darkness .type-circle { background: #1F3640; color: #FFF; }
+.type-darkness .artwork-placeholder { color: #2A4A5A; }
+.type-colorless  { background: linear-gradient(180deg, #F2EBE0 0%, #E0D8CB 35%, #C9C0B0 65%, #A89F8E 100%); color: #1F1A0F; }
+.type-colorless .energy-colorless, .type-colorless .type-circle { background: #9FA09F; color: #FFF; }
+.type-colorless .artwork-placeholder { color: #9FA09F; }
+.type-fairy      { background: linear-gradient(180deg, #F2A8C9 0%, #E68AB3 35%, #C76A95 65%, #8E4868 100%); color: #1F1A0F; }
+.type-fairy .energy-fairy, .type-fairy .type-circle { background: #E96AAA; color: #FFF; }
+.type-fairy .artwork-placeholder { color: #E96AAA; }
+.type-metal      { background: linear-gradient(180deg, #B5B8BE 0%, #9498A0 35%, #75797F 65%, #4F535A 100%); color: #1F1A0F; }
+.type-metal .energy-metal, .type-metal .type-circle { background: #9CA0A8; color: #FFF; }
+.type-metal .artwork-placeholder { color: #75797F; }
+
+.energy-fighting { background: #E84A28; color: #FFF; }
+.energy-fire { background: #E84A28; color: #FFF; }
+.energy-water { background: #3589C2; color: #FFF; }
+.energy-lightning { background: #F8C81E; color: #3A2D08; }
+.energy-grass { background: #3FAF3A; color: #FFF; }
+.energy-psychic { background: #A35BAA; color: #FFF; }
+.energy-darkness { background: #1F3640; color: #FFF; }
+.energy-colorless { background: #9FA09F; color: #FFF; }
+.energy-fairy { background: #E96AAA; color: #FFF; }
+.energy-metal { background: #9CA0A8; color: #FFF; }
+
+/* ============ FINAL VIEW ============ */
+.view-final {
+  background: linear-gradient(140deg, #FFFAF1 0%, #FFE7C9 100%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5vh 4vw;
+}
+.view-final.active { display: flex; opacity: 1; }
+.final-title {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(48px, 6vw, 96px);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: #DC0A2D;
+  text-align: center;
+  text-shadow: 3px 3px 0 #FFCB05, 6px 6px 0 rgba(0,0,0,0.06);
+}
+.final-sub {
+  font-size: 17px;
+  font-weight: 500;
+  color: #6A4A1A;
+  margin-top: 8px;
+  text-align: center;
+  font-style: italic;
+}
+.cards-grid {
+  margin-top: 36px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  perspective: 1200px;
+  max-width: 92vw;
+}
+.cards-grid .card {
+  width: 150px; height: 210px;
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.22);
+  transform: translate(var(--from-x, 0), var(--from-y, 0)) scale(var(--from-scale, 1));
+  opacity: 0;
+  animation: card-grid-in 0.7s var(--ease-spring) forwards;
+  animation-delay: var(--delay, 0s);
+}
+.cards-grid .card-inner { padding: 3px 5px; border-radius: 5px; }
+.cards-grid .card .name { font-size: 10px; margin-left: 2px; }
+.cards-grid .card .hp-value { font-size: 9px; }
+.cards-grid .card .hp-label { font-size: 4px; }
+.cards-grid .card .type-circle { width: 10px; height: 10px; font-size: 5px; }
+.cards-grid .card .stage-badge { font-size: 3.5px; padding: 1px 2px; }
+.cards-grid .card .evolves-bar { gap: 2px; padding-left: 1px; margin-bottom: 1px; }
+.cards-grid .card .pre-evo-circle { width: 12px; height: 12px; font-size: 2.5px; }
+.cards-grid .card .evolves-from { font-size: 3.5px; padding: 0 3px; }
+.cards-grid .card .artwork { height: 88px; margin-top: 1px; border-width: 1px; }
+.cards-grid .card .artwork::before { inset: 1px; }
+.cards-grid .card .artwork-placeholder { font-size: 5px; letter-spacing: 0.8px; }
+.cards-grid .card .artwork-subtitle { font-size: 4px; margin-top: 2px; }
+.cards-grid .card .pokedex-bar { font-size: 2.8px; padding: 1px 2px; }
+.cards-grid .card .attack-section { padding: 3px 1px 1px 1px; }
+.cards-grid .card .energy { width: 8px; height: 8px; font-size: 4px; margin-right: 1px; border-width: 0.5px; }
+.cards-grid .card .attack-name { font-size: 5.5px; }
+.cards-grid .card .attack-damage { font-size: 8px; }
+.cards-grid .card .attack-text { font-size: 2.8px; padding: 1px 3px; line-height: 1.25; }
+.cards-grid .card .stat-box { font-size: 2.5px; padding: 1px 2px; min-height: 6px; gap: 1px; border-radius: 3px; }
+.cards-grid .card .stat-value { font-size: 3px; }
+.cards-grid .card .bottom-strip { gap: 3px; padding: 1px 2px; }
+.cards-grid .card .footer { padding: 1px 2px 0 2px; gap: 2px; }
+.cards-grid .card .footer-left { font-size: 2.5px; }
+.cards-grid .card .footer-left .rarity { font-size: 3px; letter-spacing: 1px; }
+.cards-grid .card .flavor { font-size: 2.5px; padding: 1px 2px; line-height: 1.25; max-width: none; }
+
+.final-home {
+  position: absolute;
+  top: 28px; right: 36px;
+  z-index: 11;
+}
+
+/* ============ ANIMATIONS ============ */
+@keyframes idle-bounce {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+  50%      { transform: translate(-50%, -50%) translateY(-8px); }
+}
+@keyframes idle-bounce-card {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+  50%      { transform: translate(-50%, -50%) translateY(-8px); }
+}
+@keyframes stage-enter {
+  0%   { transform: translate(-50%, -50%) scale(0.05); opacity: 0; }
+  60%  { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+}
+@keyframes stage-exit {
+  0%   { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.7);  opacity: 0; }
+}
+@keyframes reveal-pop {
+  0%   { transform: translate(-50%, -50%) scale(1);    }
+  55%  { transform: translate(-50%, -50%) scale(1.18); }
+  100% { transform: translate(-50%, -50%) scale(1.10); }
+}
+@keyframes reveal-idle {
+  0%, 100% { transform: translate(-50%, -50%) scale(1.10) translateY(0); }
+  50%      { transform: translate(-50%, -50%) scale(1.10) translateY(-7px); }
+}
+.silhouette-stage.reveal-idle {
+  animation: reveal-idle 2.4s ease-in-out infinite;
+}
+@keyframes into-card {
+  0%   { transform: translate(-50%, -50%) scale(1.10); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.35); opacity: 0; }
+}
+@keyframes card-enter {
+  0%   { transform: translate(-50%, -50%) scale(0.4);  opacity: 0; }
+  60%  { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+}
+@keyframes card-exit {
+  0%   { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0; }
+}
+@keyframes hint-in {
+  0%   { transform: translateY(-12px); opacity: 0; }
+  100% { transform: translateY(0);     opacity: 1; }
+}
+@keyframes btn-exit-up {
+  0%   { transform: scale(1);    opacity: 1; }
+  40%  { transform: scale(1.2);  opacity: 1; }
+  100% { transform: scale(1.2);  opacity: 0; }
+}
+@keyframes card-grid-in {
+  0%   { transform: translate(var(--from-x, 0), var(--from-y, 0)) scale(1.0); opacity: 0; }
+  100% { transform: translate(0, 0) scale(1); opacity: 1; }
+}
+
+/* ============ REVEAL NAME (floats above silhouette, morphs into card) ============ */
+.reveal-name {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  font-family: 'Anton', 'Impact', sans-serif;
+  font-weight: 400;
+  font-size: clamp(40px, 5.2vw, 68px);
+  letter-spacing: 1px;
+  color: #1A1A1F;
+  text-shadow: 3px 3px 0 rgba(255,255,255,0.45);
+  white-space: nowrap;
+  opacity: 0;
+  z-index: 9;
+  pointer-events: none;
+  text-transform: uppercase;
+  transform-origin: top left;
+  will-change: transform, opacity;
+}
+.reveal-name.show {
+  transition: opacity 0.55s ease;
+  opacity: 1;
+}
+@keyframes reveal-name-idle {
+  0%, 100% { transform: translate(-50%, calc(-50% - 270px)) translateY(0); }
+  50%      { transform: translate(-50%, calc(-50% - 270px)) translateY(-8px); }
+}
+.reveal-name.idle {
+  animation: reveal-name-idle 2.4s ease-in-out infinite;
+}
+
+/* ============ FALLBACK SILHOUETTE PLACEHOLDER ============ */
+.placeholder-silhouette {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.placeholder-silhouette svg { width: 80%; height: 80%; }
+.placeholder-revealed {
+  width: 100%; height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.55));
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+}
+.placeholder-revealed .ph-name {
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  letter-spacing: 1px;
+  color: var(--type-deep, #DC0A2D);
+}
+.placeholder-revealed .ph-sub {
+  font-style: italic;
+  font-size: 14px;
+  color: #4A4A52;
+  margin-top: 6px;
+}
+
+/* ============ TYPE-AWARE PAGE BACKGROUND ============ */
+body.bg-fighting   { background-color: #F1BD6E; }
+body.bg-fire       { background-color: #F4915C; }
+body.bg-water      { background-color: #88C3E8; }
+body.bg-lightning  { background-color: #F9E37A; }
+body.bg-grass      { background-color: #AEDA6F; }
+body.bg-psychic    { background-color: #CFA8DD; }
+body.bg-darkness   { background-color: #5E8694; }
+body.bg-colorless  { background-color: #EBE3D4; }
+body.bg-fairy      { background-color: #F7C2D8; }
+body.bg-metal      { background-color: #C7C9CE; }
+body.bg-home       { background-color: #FFFFFF; }
+
+/* ============ HUD ============ */
+.hud {
+  position: absolute;
+  bottom: 20px;
+  right: 24px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: rgba(0,0,0,0.45);
+  font-weight: 700;
+  z-index: 7;
+  pointer-events: none;
+}
+
+/* ============ COLLECTION BUTTON (HOME) ============ */
+.collection-btn {
+  position: absolute;
+  top: 28px; right: 36px;
+  z-index: 11;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.05);
+  color: rgba(26,26,31,0.5);
+  font-family: 'Anton', sans-serif;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  transition: all 0.25s var(--ease);
+  box-shadow: none;
+}
+.collection-btn:hover {
+  background: rgba(0,0,0,0.08);
+  color: rgba(26,26,31,0.75);
+  transform: scale(1.04);
+}
+.collection-btn svg { width: 16px; height: 16px; }
+
+/* ============ VIEW-COLLECTION ============ */
+.view-collection {
+  background: linear-gradient(140deg, #FFFAF1 0%, #FFE7C9 100%);
+}
+.collection-header {
+  position: absolute;
+  top: 28px; left: 0; right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 36px;
+  z-index: 10;
+}
+.collection-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: #1A1A1F;
+}
+.collection-grid-wrap {
+  position: absolute;
+  inset: 100px 0 60px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+  max-width: 92vw;
+  perspective: 1200px;
+}
+.collection-grid .card {
+  cursor: pointer;
+  width: 165px; height: 230px;
+  padding: 4px;
+  border-radius: 9px;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.22);
+  transform: scale(1);
+  opacity: 0;
+  animation: card-grid-in 0.55s var(--ease-spring) forwards;
+  animation-delay: var(--delay, 0s);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+}
+.collection-grid .card:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.28);
+}
+
+/* shrink card internals to fit smaller grid card */
+.collection-grid .card .card-inner,
+.cards-grid .card .card-inner { padding: 3px 5px; border-radius: 5px; }
+.collection-grid .card .header,
+.cards-grid .card .header { gap: 2px; margin-bottom: 2px; }
+.collection-grid .card .name { font-size: 11px; margin-left: 2px; }
+.collection-grid .card .hp-value { font-size: 11px; }
+.collection-grid .card .hp-label { font-size: 5px; }
+.collection-grid .card .type-circle { width: 12px; height: 12px; font-size: 7px; }
+.collection-grid .card .stage-badge { font-size: 4.5px; padding: 1px 3px; }
+.collection-grid .card .evolves-bar { gap: 2px; padding-left: 1px; margin-bottom: 1px; }
+.collection-grid .card .pre-evo-circle { width: 14px; height: 14px; font-size: 3px; }
+.collection-grid .card .evolves-from { font-size: 4.5px; padding: 0 3px; }
+.collection-grid .card .artwork { height: 96px; margin-top: 2px; border-width: 1px; }
+.collection-grid .card .artwork::before { inset: 1px; }
+.collection-grid .card .artwork-placeholder { font-size: 6px; letter-spacing: 0.8px; }
+.collection-grid .card .artwork-subtitle { font-size: 4.5px; margin-top: 2px; }
+.collection-grid .card .pokedex-bar { font-size: 3.5px; padding: 1px 3px; }
+.collection-grid .card .attack-section { padding: 4px 1px 2px 1px; }
+.collection-grid .card .energy { width: 10px; height: 10px; font-size: 5px; margin-right: 1px; border-width: 0.5px; }
+.collection-grid .card .attack-name { font-size: 6.5px; }
+.collection-grid .card .attack-damage { font-size: 9px; }
+.collection-grid .card .attack-text { font-size: 3.5px; padding: 1px 3px; line-height: 1.3; }
+.collection-grid .card .stat-box { font-size: 3.2px; padding: 1px 3px; min-height: 8px; gap: 1px; border-radius: 3px; }
+.collection-grid .card .stat-value { font-size: 4px; }
+.collection-grid .card .bottom-strip { gap: 3px; padding: 1px 2px; }
+.collection-grid .card .footer { padding: 2px 2px 0 2px; gap: 2px; }
+.collection-grid .card .footer-left { font-size: 3px; }
+.collection-grid .card .footer-left .rarity { font-size: 3.5px; letter-spacing: 1px; }
+.collection-grid .card .flavor { font-size: 3px; padding: 1px 2px; line-height: 1.25; max-width: none; }
+
+/* ============ LIGHTBOX (CARD FULLSCREEN) ============ */
+.lightbox {
+  position: fixed; inset: 0;
+  z-index: 60;
+  background: rgba(15, 15, 18, 0.78);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox.show { display: flex; }
+.lightbox-card {
+  position: relative;
+  z-index: 2;
+  will-change: transform;
+}
+.lb-nav {
+  position: absolute;
+  top: 50%;
+  width: 60px; height: 60px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.92);
+  color: #1A1A1F;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-family: 'Anton', sans-serif;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-50%);
+  transition: transform 0.18s var(--ease), background 0.2s var(--ease);
+  z-index: 3;
+}
+.lb-nav:hover { background: #FFFFFF; transform: translateY(-50%) scale(1.08); }
+.lb-prev { left: 4vw; }
+.lb-next { right: 4vw; }
+.lb-home {
+  position: absolute;
+  top: 28px; right: 36px;
+  width: 52px; height: 52px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.92);
+  color: #1A1A1F;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.18s var(--ease);
+  z-index: 3;
+}
+.lb-home:hover { transform: scale(1.08); }
+.lb-home svg, .lb-nav svg { width: 22px; height: 22px; }
+.lightbox-card .card {
+  /* scale the canonical 420×590 card up for fullscreen presence */
+  transform: scale(1.25);
+}
+</style>
+</head>
+<body class="bg-home">
+
+<!-- ====================== HOME ====================== -->
+<section class="view view-home active" id="view-home">
+  <div class="pokeballs" id="pokeballs" aria-hidden="true"></div>
+  <button class="collection-btn" id="btn-collection" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="7" rx="1.2"/><rect x="14" y="4" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg>
+    Collection
+  </button>
+  <div class="home-content">
+    <h1 class="home-title">
+      Devine<br>le Pokémon
+      <small>Édition spéciale EVJFG · Claire &amp; Nico</small>
+    </h1>
+    <button class="start-btn" id="start-btn" type="button">Start</button>
+  </div>
+</section>
+
+<!-- ====================== GAME ====================== -->
+<section class="view view-game" id="view-game">
+  <div class="nav-bar">
+    <button class="nav-btn" id="btn-back" type="button" aria-label="Précédent" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <button class="nav-btn" id="btn-home" type="button" aria-label="Accueil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+    </button>
+  </div>
+
+  <div class="stage silhouette-stage" id="silhouette-stage"></div>
+  <div class="stage card-stage" id="card-stage"></div>
+
+  <div class="hints" id="hints"></div>
+
+  <div class="actions" id="actions">
+    <button class="btn-action" id="btn-hint" type="button">Indice</button>
+    <button class="btn-action primary" id="btn-reveal" type="button">Reveal</button>
+    <button class="btn-action primary hidden" id="btn-next" type="button">Suivant</button>
+  </div>
+
+  <div class="hud" id="hud"></div>
+</section>
+
+<!-- ====================== COLLECTION ====================== -->
+<section class="view view-collection" id="view-collection">
+  <div class="collection-header">
+    <div style="width:52px;"></div>
+    <div class="collection-title">Collection — 15 cartes</div>
+    <button class="nav-btn" id="btn-collection-home-top" type="button" aria-label="Accueil">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+    </button>
+  </div>
+  <div class="collection-grid-wrap">
+    <div class="collection-grid" id="collection-grid"></div>
+  </div>
+</section>
+
+<!-- ====================== LIGHTBOX (one card fullscreen) ====================== -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lb-nav lb-prev" id="lb-prev" type="button" aria-label="Carte précédente">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+  </button>
+  <div class="lightbox-card" id="lb-card"></div>
+  <button class="lb-nav lb-next" id="lb-next" type="button" aria-label="Carte suivante">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </button>
+</div>
+
+<!-- ====================== FINAL ====================== -->
+<section class="view view-final" id="view-final">
+  <button class="nav-btn final-home" id="btn-final-home" type="button" aria-label="Accueil">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+  </button>
+  <h2 class="final-title">Bien joué !</h2>
+  <div class="final-sub">Que votre mariage soit aussi mythique qu'un Mew chromatique 💍</div>
+  <div class="cards-grid" id="cards-grid"></div>
+</section>
+
+<script>
+/* =========================================================
+   MASHUP DATA  (inlined from content.js)
+   ========================================================= */
+const MASHUPS = [
+  { num:"01", pokemonBase:"Machoke", nomMashup:"Nicogneur", target:"Nico", type:"fighting", stage:"Stage 1", evolvesFrom:"Machop", hp:100, pokedexNumber:"0067", species:"Crossfit", height:"5'09\"", weight:"85 kg", attackCost:["fighting","fighting","colorless"], attackName:"WOD du Dimanche", attackDamage:80, attackText:"Inflige 20 dégâts de plus pour chaque shaker de whey attaché.", weakness:{type:"psychic",value:"+20"}, retreat:2, flavorText:"Il s'est mis au CrossFit pour fondre avant le mariage. Sa whey n'est jamais bien loin.", indices:["Pratique un sport intense","Donne tout pendant chaque séance, jusqu'à l'épuisement","Se complémente, il faut garder les muscles"] },
+  { num:"02", pokemonBase:"Ponyta", nomMashup:"Pimentita", target:"Nico", type:"fire", stage:"Basic", hp:70, pokedexNumber:"0077", species:"Sauce Piquante", height:"3'03\"", weight:"30 kg", attackCost:["fire","fire"], attackName:"Carolina Reaper", attackDamage:60, attackText:"L'Adversaire est désormais Brûlé. Lait fortement recommandé.", weakness:{type:"water",value:"+20"}, retreat:1, flavorText:"Sa crinière s'enflamme à chaque bouchée. Aucun palais humain ne peut suivre sa tolérance Scoville.", indices:["Galope quand il y a du feu sous les sabots","Adore la chaleur, encore plus si elle pique","A développé une tolérance Scoville hors-norme"] },
+  { num:"03", pokemonBase:"Magneton", nomMashup:"Dispersaton", target:"Nico", type:"lightning", stage:"Stage 1", evolvesFrom:"Magnemite", hp:90, pokedexNumber:"0082", species:"Hyperactif", height:"3'03\"", weight:"60 kg", attackCost:["lightning","lightning","colorless"], attackName:"Dispersion Totale", attackDamage:70, attackText:"Ce Pokémon attaque dans 3 directions en même temps. Aucune défausse possible.", weakness:{type:"fighting",value:"+20"}, retreat:2, flavorText:"Trois cerveaux tournent en parallèle 24h/24 : Kings & Lords, AI et basket. Seule Claire peut le rappeler à l'ordre.", indices:["Plusieurs cerveaux qui tournent en parallèle","Cultive toutes les passions à la fois","Hyperactif, ne sait pas s'arrêter"] },
+  { num:"04", pokemonBase:"Mr. Mime", nomMashup:"Mr. Daddy", target:"Nico", type:"psychic", stage:"Basic", hp:90, pokedexNumber:"0122", species:"Cringe-Mime", height:"4'03\"", weight:"55 kg", attackCost:["psychic","colorless"], attackName:"Jeu de Mot Cringe", attackDamage:40, attackText:"L'Adversaire est déstabilisé. +20 s'il est bon public.", weakness:{type:"psychic",value:"+20"}, retreat:1, flavorText:"« Vietnam ta touillette » — sa blague signature. Ça reste dans la tête.", indices:["Coincé dans une cage qui n'existe pas","Place une vanne à chaque ouverture","Pro des blagues de papa"] },
+  { num:"05", pokemonBase:"Smoochum", nomMashup:"Nipoutou", target:"Nico", type:"psychic", stage:"Basic", hp:80, pokedexNumber:"0238", species:"Designer", height:"1'04\"", weight:"13 kg", attackCost:["psychic","colorless"], attackName:"Coupe Yolo", attackDamage:30, attackText:"L'Adversaire est aveuglé. Qui est ce Pokémon en face de moi ?", weakness:{type:"psychic",value:"+20"}, retreat:2, flavorText:"Méconnaissable tous les 4 mois, à chaque passage chez le coiffeur-barbier.", indices:["Aime les bisous","T'as essayé l'argot ?","La coupe est en évolution"] },
+  { num:"06", pokemonBase:"Snorlax", nomMashup:"Grignoflex", target:"Nico", type:"colorless", stage:"Basic", hp:150, pokedexNumber:"0143", species:"Grignoteur", height:"6'11\"", weight:"90 kg", attackCost:["colorless","colorless","colorless"], attackName:"Frigo Ouvert", attackDamage:60, attackText:"Pioche 2 collations. Divisés par deux si Claire le surprend la main dans le sac.", weakness:{type:"fighting",value:"+20"}, retreat:4, flavorText:"Grignote avec gourmandise, a du mal à s'arrêter. Heureusement, les WOD le sauvent.", indices:["Gourmand","Ronfle","Inarrêtable"] },
+  { num:"07", pokemonBase:"Muk", nomMashup:"Grostasdetrucs", target:"Nico", type:"darkness", stage:"Stage 1", evolvesFrom:"Grimer", hp:130, pokedexNumber:"0089", species:"Compulsif", height:"3'11\"", weight:"100 kg", attackCost:["darkness","darkness","colorless"], attackName:"Black Friday", attackDamage:70, attackText:"Chaque carte Pokémon, sauce piquante et objet collectionné ajoute +10.", weakness:{type:"fighting",value:"+20"}, retreat:3, flavorText:"Accumule plus vite qu'il ne consomme. Ses placards sont un musée de lubies passées.", indices:["Aime collectionner","Accumule, jusqu'à déborder","Il n'y a bientôt plus d'espace de stockage disponible"] },
+  { num:"08", pokemonBase:"Scyther", nomMashup:"Inseclairteur", target:"Claire", type:"grass", stage:"Basic", hp:90, pokedexNumber:"0123", species:"Main Verte", height:"4'11\"", weight:"56 kg", attackCost:["grass","colorless"], attackName:"Pouce Vert", attackDamage:50, attackText:"Plante 3 fleurs à longue tige sur le terrain. +10 par fleur attachée.", weakness:{type:"fire",value:"+20"}, retreat:1, flavorText:"A déjà préparé des dizaines de pots de petites fleurs pour le mariage. Son bananier prospère, ses nénuphars aussi.", indices:["Le monde de l'infiniment petit","Peut couper tout ce qui dépasse pour relancer la croissance","L'outil indispensable quand on a la main verte"] },
+  { num:"09", pokemonBase:"Butterfree", nomMashup:"Brocantusion", target:"Claire", type:"grass", stage:"Stage 2", evolvesFrom:"Metapod", hp:120, pokedexNumber:"0012", species:"Chineuse", height:"3'07\"", weight:"32 kg", attackCost:["grass","grass","colorless"], attackName:"Trouvaille Brocante", attackDamage:70, attackText:"Détecte une pièce rare à 50 mètres. Cadre Ikea : aucun effet.", weakness:{type:"fire",value:"+20"}, retreat:1, flavorText:"Son cœur s'emballe à chaque trouvaille. Les vide-greniers du dimanche sont son terrain de jeu préféré.", indices:["Ce n'est pas une illusion","Papillonne d'objet en objet","Passion brocante"] },
+  { num:"10", pokemonBase:"Omanyte", nomMashup:"Antiquitoss", target:"Claire", type:"water", stage:"Basic", hp:70, pokedexNumber:"0138", species:"Antiquaire", height:"1'04\"", weight:"8 kg", attackCost:["water","colorless"], attackName:"Attaque Surprise", attackDamage:40, attackText:"Plus c'est vieux, plus ça frappe fort. +20 par année d'ancienneté.", weakness:{type:"grass",value:"+20"}, retreat:1, flavorText:"Il ne manque que la piscine. En attendant, les distributeurs à boules suffisent à la remplir.", indices:["Mimi comme tout","D'une autre époque, plus c'est ancien mieux c'est","Obsession particulière : les boules"] },
+  { num:"11", pokemonBase:"Togepi", nomMashup:"Togeclaire", target:"Claire", type:"fairy", stage:"Basic", hp:60, pokedexNumber:"0175", species:"Multi-Passions", height:"1'00\"", weight:"2 kg", attackCost:["fairy"], attackName:"« Alors ? »", attackDamage:30, attackText:"Regard insistant et plein de malice. « Bon, quand est-ce que vous faites des enfants ? » L'Adversaire est désormais Confus. +20 s'il est en couple.", weakness:{type:"metal",value:"+10"}, retreat:1, flavorText:"Éclot en révélant une nouvelle passion à chaque saison : plantes, insectes, yoga, déco, antiquités…", indices:["Plein de surprises, on ne sait jamais ce qui va sortir de la coquille","12 passions en parallèle","Veut des bébés, mais surtout dans son entourage"] },
+  { num:"12", pokemonBase:"Ledyba", nomMashup:"Coxyclaire", target:"Claire", type:"grass", stage:"Basic", hp:50, pokedexNumber:"0165", species:"Maman-Coccinelle", height:"3'03\"", weight:"11 kg", attackCost:["grass"], attackName:"Pull Moche", attackDamage:30, attackText:"L'Adversaire est désormais vêtu d'un pull moche de Noël devant tous les autres en costards. Il est Confus.", weakness:{type:"fire",value:"+20"}, retreat:1, flavorText:"Avec Nico, ils ont accueilli tout le monde en pulls moches pour les emmener à leur vrai mariage à la mairie. Iconique.", indices:["Petite bête mignonne","On peut deviner son âge en comptant ses points","Pro de l'organisation de Secret Santa"] },
+  { num:"13", pokemonBase:"Alakazam", nomMashup:"Alakaclaire", target:"Claire", type:"psychic", stage:"Stage 2", evolvesFrom:"Kadabra", hp:130, pokedexNumber:"0065", species:"Stratège", height:"4'11\"", weight:"48 kg", attackCost:["psychic","colorless","colorless"], attackName:"Calcul Mental", attackDamage:60, attackText:"Anticipe 3 coups d'avance. Connaît tous les gossips avant tout le monde. +30 si jeu de société en cours.", weakness:{type:"psychic",value:"+20"}, retreat:2, flavorText:"QI redoutable, mémoire des ragots infaillible. À Noël, elle a déjà gagné le Time's Up avant la 2e manche.", indices:["Comme un air de magie","Toujours 3 coups d'avance","Surnommé l'architecte"] },
+  { num:"14", pokemonBase:"Hitmonlee", nomMashup:"Kiclaire", target:"Claire", type:"fighting", stage:"Basic", hp:100, pokedexNumber:"0106", species:"Yoga Master", height:"5'11\"", weight:"55 kg", attackCost:["fighting","fighting"], attackName:"Posture du Pigeon Royal", attackDamage:70, attackText:"Pose impossible. L'Adversaire est désormais Étonné. +20 si l'Adversaire est moins souple.", weakness:{type:"psychic",value:"+20"}, retreat:2, flavorText:"Enchaîne les postures impossibles avec un calme déconcertant. Personne ne comprend comment elle fait.", indices:["Un coup de pied légendaire","Souplesse hors du commun","Yoga power !"] },
+  { num:"15", pokemonBase:"Famille Nidoran", nomMashup:"La Famille Nido", target:"Couple+Filles", type:"fairy", stage:"Family", hp:999, pokedexNumber:"0033", species:"Mariage", height:"—", weight:"—", attackCost:["fairy","fairy","colorless"], attackName:"Oui, Je Le Veux", attackDamage:1000, attackText:"Évolution finale du couple Pokémon canonique. Cap sur Domont, en Tesla Model Y, avec deux Nidoran à l'arrière.", weakness:{type:"psychic",value:"—"}, retreat:0, flavorText:"Ensemble depuis 14 ans, Pomme (5) et Dune (4) en évolutions. Cette année : forme finale.", indices:["Un troupeau, comme les Addams","À des cornes préhistoriques","Deux parents évolués au maximum, deux petits encore à leur forme de base"] }
+];
+
+const ENERGY_ICONS = {
+  fighting: "✊", fire: "🔥", water: "💧", lightning: "⚡",
+  grass: "🌿", psychic: "👁", darkness: "⚫", colorless: "✦",
+  fairy: "🌟", metal: "⚙"
+};
+const TYPE_DEEP = {
+  fighting:"#8E5418", fire:"#8A2E0C", water:"#154874", lightning:"#8E6D04",
+  grass:"#3D6310", psychic:"#582C61", darkness:"#0F2730", colorless:"#A89F8E",
+  fairy:"#8E4868", metal:"#4F535A"
+};
+const ALL_TYPE_CLASSES = Object.keys(TYPE_DEEP).map(t => 'bg-' + t).concat('bg-home');
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let state = {
+  order: [],
+  currentIndex: 0,
+  rounds: [],
+  phase: 'home',
+  busy: false
+};
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function slug(s) { return s.toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* Smart shuffle: keeps Nicolas/Claire mashups well alternated (no long runs of same target),
+   Nidoran family always last */
+function buildOrder() {
+  const nico   = shuffle(MASHUPS.filter(m => m.target === 'Nico'));
+  const claire = shuffle(MASHUPS.filter(m => m.target === 'Claire'));
+  const out = [];
+  while (nico.length || claire.length) {
+    const last = out[out.length - 1];
+    let pickNico;
+    if (!nico.length)        pickNico = false;
+    else if (!claire.length) pickNico = true;
+    else if (last && last.target === 'Nico')   pickNico = Math.random() < 0.25;
+    else if (last && last.target === 'Claire') pickNico = Math.random() < 0.75;
+    else                                       pickNico = Math.random() < 0.5;
+    out.push((pickNico ? nico : claire).shift());
+  }
+  out.push(MASHUPS.find(m => m.num === '15'));
+  return out;
+}
+
+function energyHTML(type, cls) {
+  return `<span class="energy energy-${type} ${cls || ''}">${ENERGY_ICONS[type] || '?'}</span>`;
+}
+
+/* Builds the inline Pokémon card markup using the inline CSS classes */
+function buildCardHTML(m, opts) {
+  opts = opts || {};
+  const showArt = !!opts.showArt;
+  const stageMap = { 'Stage 1':'STAGE 1', 'Stage 2':'STAGE 2', 'Family':'FAMILY', 'Basic':'BASIC' };
+  const stageText = stageMap[m.stage] || 'BASIC';
+  const evolves = m.evolvesFrom ? `
+    <div class="evolves-bar">
+      <div class="pre-evo-circle">${m.evolvesFrom}</div>
+      <div class="evolves-from">Evolves from ${m.evolvesFrom}</div>
+    </div>` : '';
+
+  const artInner = showArt
+    ? `<img src="images/mashups/${slug(m.nomMashup)}.png" alt="${m.nomMashup}"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+       <div class="artwork-placeholder-wrap" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; flex-direction:column;">
+         <div class="artwork-placeholder">[ MONTAGE PHOTO ]</div>
+         <div class="artwork-subtitle">${m.pokemonBase}<br>+ ${m.target}</div>
+       </div>`
+    : `<div class="artwork-placeholder">[ MONTAGE PHOTO ]</div>
+       <div class="artwork-subtitle">${m.pokemonBase}<br>+ ${m.target}</div>`;
+
+  const weaknessIcon = m.weakness.value !== '—'
+    ? `<span class="energy energy-${m.weakness.type}" style="width:12px;height:12px;font-size:7px;">${ENERGY_ICONS[m.weakness.type]}</span>`
+    : '';
+
+  let retreatHTML;
+  if (m.retreat > 0) {
+    retreatHTML = Array(m.retreat).fill(0).map(() => energyHTML('colorless')).join('').replace(/width: 19px;/g, 'width:12px');
+    // Resize on the fly
+    retreatHTML = Array(m.retreat).fill(0).map(() => `<span class="energy energy-colorless" style="width:12px;height:12px;font-size:7px;">✦</span>`).join('');
+  } else {
+    retreatHTML = '<span style="font-size:8px;">—</span>';
+  }
+
+  return `
+    <div class="card type-${m.type}">
+      <div class="card-inner">
+        <div class="header">
+          <div class="stage-badge">${stageText}</div>
+          <div class="name">${m.nomMashup}</div>
+          <div class="hp-block">
+            <span class="hp-label">HP</span>
+            <span class="hp-value">${m.hp}</span>
+          </div>
+          <div class="type-circle">${ENERGY_ICONS[m.type]}</div>
+        </div>
+        ${evolves}
+        <div class="artwork">${artInner}</div>
+        <div class="pokedex-bar">NO. ${m.pokedexNumber} ${m.species} Pokémon &nbsp;·&nbsp; HT: ${m.height} &nbsp;·&nbsp; WT: ${m.weight}</div>
+        <div class="attack-section">
+          <div class="attack-row">
+            <div class="attack-cost">${m.attackCost.map(c => energyHTML(c)).join('')}</div>
+            <div class="attack-name">${m.attackName}</div>
+            <div class="attack-damage">${m.attackDamage}</div>
+          </div>
+          <div class="attack-text">${m.attackText}</div>
+        </div>
+        <div class="bottom-strip">
+          <div class="stat-box">
+            <span class="stat-label">weakness</span>
+            ${weaknessIcon}
+            <span class="stat-value">${m.weakness.value}</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">retreat</span>
+            ${retreatHTML}
+          </div>
+        </div>
+        <div class="footer">
+          <div class="footer-left">
+            <span class="illus">Illus. EVJFG Squad</span>
+            <span class="rarity">◇ ◇</span>
+          </div>
+          <div class="flavor">${m.flavorText}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* Silhouette image element with placeholder fallback */
+function silhouetteHTML(m) {
+  return `
+    <img src="images/silhouettes/${slug(m.nomMashup)}.png"
+         alt="Silhouette mystère"
+         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+         draggable="false">
+    <div class="placeholder-silhouette" style="display:none;">
+      <svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 6 C 78 6, 92 28, 86 52 C 96 60, 96 80, 78 92 C 70 100, 58 102, 50 100 C 42 102, 30 100, 22 92 C 4 80, 4 60, 14 52 C 8 28, 22 6, 50 6 Z"
+              fill="#1A1A1F"/>
+        <text x="50" y="64" text-anchor="middle" font-family="Anton, sans-serif" font-size="34" fill="rgba(255,255,255,0.18)">?</text>
+      </svg>
+    </div>`;
+}
+
+function revealedHeroHTML(m) {
+  return `
+    <img src="images/mashups/${slug(m.nomMashup)}.png"
+         alt="${m.nomMashup}"
+         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+         draggable="false"
+         style="border-radius:18px; box-shadow:0 18px 42px rgba(0,0,0,0.32);">
+    <div class="placeholder-revealed" style="display:none;">
+      <div class="ph-name">${m.nomMashup}</div>
+      <div class="ph-sub">${m.pokemonBase} + ${m.target}</div>
+    </div>`;
+}
+
+/* =========================================================
+   DOM REFS
+   ========================================================= */
+const $ = (id) => document.getElementById(id);
+const body                = document.body;
+const viewHome            = $('view-home');
+const viewGame            = $('view-game');
+const viewFinal           = $('view-final');
+const viewCollection      = $('view-collection');
+const startBtn            = $('start-btn');
+const btnBack             = $('btn-back');
+const btnHome             = $('btn-home');
+const btnHint             = $('btn-hint');
+const btnReveal           = $('btn-reveal');
+const btnNext             = $('btn-next');
+const btnFinalHome        = $('btn-final-home');
+const btnCollection       = $('btn-collection');
+const btnCollectionHome   = $('btn-collection-home-top');
+const silStage            = $('silhouette-stage');
+const cardStage           = $('card-stage');
+const hintsEl             = $('hints');
+const hudEl               = $('hud');
+const cardsGridEl         = $('cards-grid');
+const collectionGridEl    = $('collection-grid');
+const pokeballsEl         = $('pokeballs');
+const lightboxEl          = $('lightbox');
+const lbCardEl            = $('lb-card');
+const lbPrev              = $('lb-prev');
+const lbNext              = $('lb-next');
+
+let lbIdx = 0;
+let lbFromEl = null;
+
+/* =========================================================
+   POKEBALL BACKGROUND (home)
+   ========================================================= */
+function renderPokeballs() {
+  pokeballsEl.innerHTML = '';
+  const targetCount = 7;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const placed = [];
+  const maxAttempts = 250;
+  let attempts = 0;
+  const minGap = 24;
+  while (placed.length < targetCount && attempts < maxAttempts) {
+    attempts++;
+    const size = 130 + Math.random() * 220;
+    const r = size / 2;
+    const x = r + Math.random() * (vw - 2 * r);
+    const y = r + Math.random() * (vh - 2 * r);
+    let overlap = false;
+    for (const p of placed) {
+      const dx = x - p.x, dy = y - p.y;
+      if (Math.sqrt(dx * dx + dy * dy) < r + p.r + minGap) { overlap = true; break; }
+    }
+    if (overlap) continue;
+    placed.push({ x, y, r });
+    const rot = Math.random() * 360;
+    const op  = 0.05 + Math.random() * 0.05;
+    const w = document.createElement('div');
+    w.className = 'pokeball-shape';
+    w.style.cssText = `
+      width:${size}px; height:${size}px;
+      top:${y}px; left:${x}px;
+      transform: translate(-50%, -50%) rotate(${rot}deg);
+      opacity:${op};
+    `;
+    w.innerHTML = `
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="3"/>
+        <line x1="6" y1="50" x2="94" y2="50" stroke="currentColor" stroke-width="3"/>
+        <circle cx="50" cy="50" r="12" fill="#FFFFFF" stroke="currentColor" stroke-width="3"/>
+        <circle cx="50" cy="50" r="5" fill="currentColor"/>
+      </svg>`;
+    pokeballsEl.appendChild(w);
+  }
+}
+
+/* =========================================================
+   VIEW SWITCHING & TYPE BG
+   ========================================================= */
+function setTypeBg(type) {
+  body.classList.remove(...ALL_TYPE_CLASSES);
+  body.classList.add('bg-' + type);
+  document.documentElement.style.setProperty('--type-deep', TYPE_DEEP[type] || '#222');
+}
+
+function showView(name) {
+  [viewHome, viewGame, viewFinal, viewCollection].forEach(v => v.classList.remove('active'));
+  if (name === 'home')       viewHome.classList.add('active');
+  if (name === 'game')       viewGame.classList.add('active');
+  if (name === 'final')      viewFinal.classList.add('active');
+  if (name === 'collection') viewCollection.classList.add('active');
+}
+
+
+/* =========================================================
+   ROUND RENDERING
+   ========================================================= */
+function updateHud() {
+  if (state.phase === 'home' || state.phase === 'final') { hudEl.textContent = ''; return; }
+  hudEl.textContent = `${String(state.currentIndex + 1).padStart(2, '0')} / ${String(state.order.length).padStart(2, '0')}`;
+}
+
+function renderHints(round) {
+  hintsEl.innerHTML = '';
+  hintsEl.style.opacity = '';
+  hintsEl.style.transition = '';
+  // Hints only show during the silhouette phase
+  if (round.isRevealed) return;
+  for (let i = 0; i < round.hintsShown; i++) {
+    const indices = state.order[state.currentIndex].indices;
+    const txt = indices[i] || '';
+    const el = document.createElement('div');
+    el.className = 'hint';
+    el.style.animationDelay = (i * 0.05) + 's';
+    el.innerHTML = `<div class="hint-num">${i + 1}</div><div>${txt}</div>`;
+    hintsEl.appendChild(el);
+  }
+}
+
+function renderSilhouette(m, opts) {
+  opts = opts || {};
+  silStage.innerHTML = silhouetteHTML(m);
+  silStage.classList.remove('exit', 'reveal-pop', 'into-card', 'bounce');
+  // restart enter animation
+  silStage.style.display = 'flex';
+  silStage.offsetHeight; // reflow
+  silStage.classList.remove('enter');
+  silStage.offsetHeight;
+  if (opts.skipEnter) {
+    silStage.classList.add('bounce');
+  } else {
+    silStage.classList.add('enter');
+    silStage.addEventListener('animationend', function onEnd(e) {
+      if (e.animationName !== 'stage-enter') return;
+      silStage.removeEventListener('animationend', onEnd);
+      silStage.classList.remove('enter');
+      silStage.classList.add('bounce');
+    });
+  }
+}
+
+function renderCard(m, opts) {
+  opts = opts || {};
+  cardStage.innerHTML = buildCardHTML(m, { showArt: true });
+  cardStage.classList.add('show');
+  cardStage.classList.remove('exit');
+  if (!opts.skipEnter) {
+    cardStage.classList.remove('enter', 'bounce');
+    cardStage.offsetHeight;
+    cardStage.classList.add('enter');
+    cardStage.addEventListener('animationend', function onEnd(e) {
+      if (e.animationName !== 'card-enter') return;
+      cardStage.removeEventListener('animationend', onEnd);
+      cardStage.classList.remove('enter');
+      cardStage.classList.add('bounce');
+    });
+  } else {
+    cardStage.classList.add('bounce');
+  }
+}
+
+function clearCard() {
+  cardStage.classList.remove('show', 'enter', 'bounce', 'exit');
+  cardStage.style.cssText = '';
+  cardStage.innerHTML = '';
+}
+
+function hideSilhouette() {
+  silStage.classList.remove('bounce', 'enter', 'reveal-pop', 'into-card', 'morphing', 'exit');
+  silStage.style.cssText = '';
+  silStage.innerHTML = '';
+  silStage.style.display = 'none';
+}
+
+function syncActions() {
+  const round = state.rounds[state.currentIndex];
+  const isLast = state.currentIndex === state.order.length - 1;
+  if (state.phase === 'revealed') {
+    btnHint.classList.add('hidden');
+    btnReveal.classList.add('hidden');
+    btnNext.classList.remove('hidden');
+    btnNext.textContent = isLast ? 'Voir le score' : 'Suivant';
+  } else {
+    btnNext.classList.add('hidden');
+    btnReveal.classList.remove('hidden');
+    if (round.hintsShown >= 3) btnHint.classList.add('hidden');
+    else btnHint.classList.remove('hidden');
+  }
+  btnBack.disabled = state.currentIndex === 0 && state.phase !== 'revealed-via-back';
+  btnBack.disabled = state.currentIndex === 0;
+}
+
+function loadRound(idx, opts) {
+  opts = opts || {};
+  state.currentIndex = idx;
+  const m = state.order[idx];
+  const round = state.rounds[idx];
+  setTypeBg(m.type);
+  renderHints(round);
+  if (round.isRevealed) {
+    hideSilhouette();
+    renderCard(m, { skipEnter: !!opts.skipEnter });
+    state.phase = 'revealed';
+  } else {
+    clearCard();
+    renderSilhouette(m, { skipEnter: !!opts.skipEnter });
+    state.phase = 'silhouette';
+  }
+  syncActions();
+  updateHud();
+}
+
+/* =========================================================
+   FLOW: START
+   ========================================================= */
+function handleStart() {
+  if (state.busy) return;
+  state.busy = true;
+
+  // Build order + rounds
+  state.order = buildOrder();
+  state.rounds = state.order.map(() => ({ hintsShown: 0, isRevealed: false }));
+  state.currentIndex = 0;
+
+  // The button morphs into the first round's type background color
+  const m = state.order[0];
+  const tmp = document.createElement('div');
+  tmp.className = 'bg-' + m.type;
+  document.body.appendChild(tmp);
+  const targetColor = getComputedStyle(tmp).backgroundColor;
+  document.body.removeChild(tmp);
+
+  const homeTitle      = document.querySelector('.home-title');
+  const pokeballsLayer = document.getElementById('pokeballs');
+
+  // Fade out everything that lives on the home (title, collection btn, pokeballs)
+  // so nothing leaks around the growing button.
+  homeTitle.style.transition      = 'opacity 0.32s ease';
+  homeTitle.style.opacity         = '0';
+  btnCollection.style.transition  = 'opacity 0.32s ease';
+  btnCollection.style.opacity     = '0';
+  pokeballsLayer.style.transition = 'opacity 0.32s ease';
+  pokeballsLayer.style.opacity    = '0';
+
+  // The home view's white background transitions to the type color in parallel
+  // with the button expansion — that way when view-home is finally deactivated,
+  // the color underneath (body bg + game view) already matches.
+  viewHome.style.transition = 'background-color 0.55s ease';
+  viewHome.style.background = targetColor;
+
+  startBtn.style.background = '#DC0A2D';
+  startBtn.classList.add('expanding');
+  requestAnimationFrame(() => {
+    startBtn.style.background = targetColor;
+  });
+
+  // Pre-mount game view so the silhouette can enter as the button settles.
+  viewGame.style.display = 'block';
+  viewGame.style.opacity = '0';
+  viewGame.style.transition = 'opacity 0.45s ease';
+  setTypeBg(m.type);
+  state.phase = 'silhouette';
+  renderSilhouette(m, { skipEnter: false });
+  renderHints(state.rounds[0]);
+  syncActions();
+
+  // Cross-fade once the home content is gone and bg colors match.
+  setTimeout(() => {
+    viewGame.style.opacity = '1';
+    viewGame.classList.add('active');
+    viewHome.classList.remove('active');
+  }, 500);
+
+  // Cleanup all inline overrides after the expansion finishes.
+  setTimeout(() => {
+    startBtn.classList.remove('expanding');
+    startBtn.style.background = '';
+    viewGame.style.transition = '';
+    viewGame.style.display = '';
+    viewGame.style.opacity = '';
+    viewHome.style.transition = '';
+    viewHome.style.background = '';
+    homeTitle.style.cssText      = '';
+    btnCollection.style.cssText  = '';
+    pokeballsLayer.style.cssText = '';
+    state.busy = false;
+    updateHud();
+  }, 950);
+}
+
+/* =========================================================
+   FLOW: HINT
+   ========================================================= */
+function handleHint() {
+  if (state.busy) return;
+  const round = state.rounds[state.currentIndex];
+  if (state.phase !== 'silhouette') return;
+  if (round.hintsShown >= 3) return;
+  round.hintsShown += 1;
+  renderHints(round);
+  syncActions();
+}
+
+/* =========================================================
+   FLOW: REVEAL
+   ========================================================= */
+function handleReveal() {
+  if (state.busy) return;
+  if (state.phase !== 'silhouette') return;
+  state.busy = true;
+  const m = state.order[state.currentIndex];
+  const round = state.rounds[state.currentIndex];
+  round.isRevealed = true;
+
+  // Hide indice + reveal buttons + indices
+  btnHint.classList.add('hidden');
+  btnReveal.classList.add('hidden');
+  hintsEl.style.transition = 'opacity 0.35s ease';
+  hintsEl.style.opacity = '0';
+
+  // ---- Phase 1: swap silhouette to revealed, pop scale, float name above ----
+  silStage.classList.remove('bounce', 'enter', 'reveal-idle');
+  silStage.innerHTML = revealedHeroHTML(m);
+  silStage.offsetHeight;
+  silStage.classList.add('reveal-pop');
+
+  // Build the floating name (above the silhouette, fades in slightly after pop)
+  let nameEl = document.getElementById('reveal-name');
+  if (nameEl && nameEl.parentElement) nameEl.parentElement.removeChild(nameEl);
+  nameEl = document.createElement('div');
+  nameEl.id = 'reveal-name';
+  nameEl.className = 'reveal-name';
+  nameEl.textContent = m.nomMashup;
+  // Initial position: centered above the silhouette stage
+  nameEl.style.transform = 'translate(-50%, calc(-50% - 270px))';
+  viewGame.appendChild(nameEl);
+  // Fade in shortly after the pop completes
+  setTimeout(() => { nameEl.classList.add('show'); }, 280);
+
+  // After the pop animation, swap into idle bounce (both image + name share
+  // the exact same period/phase so the breathing feels linked).
+  const onPopEnd = (e) => {
+    if (e.animationName !== 'reveal-pop') return;
+    silStage.removeEventListener('animationend', onPopEnd);
+    silStage.classList.add('reveal-idle');
+    silStage.classList.remove('reveal-pop');
+    nameEl.classList.add('idle');
+  };
+  silStage.addEventListener('animationend', onPopEnd);
+
+  setTimeout(() => {
+    // ---- Phase 2: morph — image + name both land into their card slots
+    //               while the card frame scales up to its final size ----
+    silStage.removeEventListener('animationend', onPopEnd);
+    silStage.classList.remove('reveal-pop', 'reveal-idle');
+    nameEl.classList.remove('idle');
+
+    // 1) Mount the card at its FINAL state so we can measure target rects.
+    cardStage.innerHTML = buildCardHTML(m, { showArt: true });
+    cardStage.classList.add('show');
+    cardStage.classList.remove('enter', 'bounce', 'exit');
+    cardStage.style.transition = 'none';
+    cardStage.style.opacity = '0';
+    cardStage.style.transform = 'translate(-50%, -50%) scale(1)';
+    cardStage.offsetHeight;
+
+    const artworkEl  = cardStage.querySelector('.artwork');
+    const cardNameEl = cardStage.querySelector('.name');
+    const target     = artworkEl.getBoundingClientRect();
+    const nameTarget = cardNameEl.getBoundingClientRect();
+
+    // 2) Hide the card's embedded image + name during the morph; the floating
+    //    hero + name become the visible elements landing into their frames.
+    const cardArtImg = cardStage.querySelector('.artwork img');
+    const cardArtPh  = cardStage.querySelector('.artwork-placeholder-wrap');
+    if (cardArtImg)  cardArtImg.style.opacity = '0';
+    if (cardArtPh)   cardArtPh.style.opacity  = '0';
+    cardNameEl.style.opacity = '0';
+
+    // 3) Freeze silStage at its current visual rect (fixed positioning).
+    const cur = silStage.getBoundingClientRect();
+    silStage.classList.add('morphing');
+    silStage.style.transition = 'none';
+    silStage.style.transform  = 'none';
+    silStage.style.margin     = '0';
+    silStage.style.position   = 'fixed';
+    silStage.style.top        = cur.top    + 'px';
+    silStage.style.left       = cur.left   + 'px';
+    silStage.style.width      = cur.width  + 'px';
+    silStage.style.height     = cur.height + 'px';
+
+    // 4) FLIP for the name: snap to final state (matching card's name style)
+    //    and apply inverse transform so it visually stays in its current spot.
+    const nameStart = nameEl.getBoundingClientRect();
+    const cardNameStyle = window.getComputedStyle(cardNameEl);
+    nameEl.style.transition = 'none';
+    nameEl.style.animation  = 'none';
+    nameEl.style.top        = nameTarget.top  + 'px';
+    nameEl.style.left       = nameTarget.left + 'px';
+    nameEl.style.transform  = 'none';
+    nameEl.style.fontSize   = cardNameStyle.fontSize;
+    nameEl.style.fontWeight = '900';
+    nameEl.style.color      = cardNameStyle.color;
+    nameEl.style.fontFamily = cardNameStyle.fontFamily;
+    nameEl.style.textShadow = 'none';
+    nameEl.style.textTransform = 'none';
+    nameEl.style.letterSpacing = cardNameStyle.letterSpacing;
+    nameEl.offsetHeight;
+    const nameEnd = nameEl.getBoundingClientRect();
+    const ndx = nameStart.left - nameEnd.left;
+    const ndy = nameStart.top  - nameEnd.top;
+    const nsx = Math.max(nameStart.width / Math.max(nameEnd.width, 1), 1);
+    nameEl.style.transform = `translate(${ndx}px, ${ndy}px) scale(${nsx})`;
+    nameEl.offsetHeight;
+
+    // 5) Card: snap to gentler starting scale (0.92) — soft entrance, no jump.
+    cardStage.style.transform = 'translate(-50%, -50%) scale(0.92)';
+    cardStage.offsetHeight;
+
+    // 6) Trigger all three transitions in lockstep on the next paint frame.
+    requestAnimationFrame(() => {
+      const ease = 'cubic-bezier(0.4, 0, 0.2, 1)';
+      const dur  = '0.85s';
+
+      cardStage.style.transition = `transform ${dur} ${ease}, opacity 0.6s ease`;
+      cardStage.style.opacity   = '1';
+      cardStage.style.transform = 'translate(-50%, -50%) scale(1)';
+
+      silStage.style.transition =
+        `top ${dur} ${ease}, left ${dur} ${ease}, width ${dur} ${ease}, height ${dur} ${ease}`;
+      silStage.style.top    = target.top    + 'px';
+      silStage.style.left   = target.left   + 'px';
+      silStage.style.width  = target.width  + 'px';
+      silStage.style.height = target.height + 'px';
+
+      nameEl.style.transition = `transform ${dur} ${ease}`;
+      nameEl.style.transform  = 'translate(0, 0) scale(1)';
+    });
+
+    setTimeout(() => {
+      // 7) Morph done. Show the card's own image + name; retire the hero overlay.
+      if (cardArtImg) cardArtImg.style.opacity = '';
+      if (cardArtPh)  cardArtPh.style.opacity  = '';
+      cardNameEl.style.opacity = '';
+
+      if (nameEl && nameEl.parentElement) nameEl.parentElement.removeChild(nameEl);
+
+      silStage.classList.remove('morphing');
+      silStage.style.cssText = '';
+      silStage.innerHTML = '';
+      silStage.style.display = 'none';
+
+      cardStage.style.transition = '';
+      cardStage.style.transform = '';
+      cardStage.style.opacity = '';
+      cardStage.classList.add('bounce');
+
+      hintsEl.style.opacity = '';
+      hintsEl.innerHTML = '';
+      state.phase = 'revealed';
+      state.busy = false;
+      syncActions();
+    }, 900);
+  }, 3000);
+}
+
+/* =========================================================
+   FLOW: NEXT
+   ========================================================= */
+function handleNext() {
+  if (state.busy) return;
+  if (state.phase !== 'revealed') return;
+  const isLast = state.currentIndex === state.order.length - 1;
+  state.busy = true;
+
+  // Exit animations on card + next button
+  cardStage.classList.remove('bounce');
+  cardStage.offsetHeight;
+  cardStage.classList.add('exit');
+  btnNext.classList.add('exit-up');
+
+  setTimeout(() => {
+    btnNext.classList.remove('exit-up');
+    btnNext.classList.add('hidden');
+    if (isLast) {
+      showFinal();
+      state.busy = false;
+      return;
+    }
+    clearCard();
+    state.currentIndex += 1;
+    const m = state.order[state.currentIndex];
+    const round = state.rounds[state.currentIndex];
+    setTypeBg(m.type);
+    renderHints(round);
+    if (round.isRevealed) {
+      renderCard(m);
+      state.phase = 'revealed';
+    } else {
+      renderSilhouette(m);
+      state.phase = 'silhouette';
+    }
+    syncActions();
+    updateHud();
+    state.busy = false;
+  }, 480);
+}
+
+/* =========================================================
+   FLOW: BACK
+   ========================================================= */
+function handleBack() {
+  if (state.busy) return;
+  if (state.currentIndex === 0) return;
+  state.busy = true;
+  // Quick fade-out of current stage
+  if (state.phase === 'revealed') cardStage.classList.add('exit');
+  else silStage.classList.add('exit');
+  setTimeout(() => {
+    state.currentIndex -= 1;
+    clearCard();
+    hideSilhouette();
+    hintsEl.style.opacity = '';
+    loadRound(state.currentIndex);
+    state.busy = false;
+  }, 350);
+}
+
+/* =========================================================
+   FLOW: HOME (reset)
+   ========================================================= */
+function handleHomeReset() {
+  if (state.busy) return;
+  state.busy = true;
+  state.phase = 'home';
+  state.order = [];
+  state.rounds = [];
+  state.currentIndex = 0;
+  clearCard();
+  hideSilhouette();
+  const leftover = document.getElementById('reveal-name');
+  if (leftover && leftover.parentElement) leftover.parentElement.removeChild(leftover);
+  hintsEl.innerHTML = '';
+  hintsEl.style.opacity = '';
+  btnHint.classList.remove('hidden');
+  btnReveal.classList.remove('hidden');
+  btnNext.classList.add('hidden');
+  body.classList.remove(...ALL_TYPE_CLASSES);
+  body.classList.add('bg-home');
+  // Restore home elements in case a previous Start animation left inline overrides
+  const homeTitle      = document.querySelector('.home-title');
+  const pokeballsLayer = document.getElementById('pokeballs');
+  if (homeTitle)      homeTitle.style.cssText      = '';
+  if (pokeballsLayer) pokeballsLayer.style.cssText = '';
+  btnCollection.style.cssText = '';
+  viewHome.style.cssText      = '';
+  startBtn.classList.remove('expanding');
+  startBtn.style.cssText      = '';
+  showView('home');
+  renderPokeballs();
+  updateHud();
+  state.busy = false;
+}
+
+/* =========================================================
+   FINAL VIEW
+   ========================================================= */
+function showFinal() {
+  cardStage.classList.remove('show', 'enter', 'bounce', 'exit');
+  cardStage.innerHTML = '';
+  state.phase = 'final';
+  body.classList.remove(...ALL_TYPE_CLASSES);
+  body.classList.add('bg-home');
+  body.style.background = 'linear-gradient(140deg, #FFFAF1 0%, #FFE7C9 100%)';
+
+  cardsGridEl.innerHTML = '';
+  state.order.forEach((m, i) => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = buildCardHTML(m, { showArt: true });
+    const cardEl = wrap.firstElementChild;
+    // animation origin = center of viewport (cards "stack" out from center)
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const dx = (vw / 2 - 100) - 0;
+    const dy = (vh / 2 - 100) - 0;
+    cardEl.style.setProperty('--from-x', '0px');
+    cardEl.style.setProperty('--from-y', '0px');
+    // Last card (the currently active one) appears last; others stagger
+    const delay = (i / state.order.length) * 0.35;
+    cardEl.style.setProperty('--delay', delay + 's');
+    cardsGridEl.appendChild(cardEl);
+  });
+
+  showView('final');
+
+  updateHud();
+}
+
+/* =========================================================
+   COLLECTION  (deck viewer + lightbox)
+   ========================================================= */
+function openCollection() {
+  // Build all 15 cards in canonical order
+  collectionGridEl.innerHTML = '';
+  MASHUPS.forEach((m, i) => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = buildCardHTML(m, { showArt: true });
+    const cardEl = wrap.firstElementChild;
+    cardEl.dataset.idx = i;
+    cardEl.style.setProperty('--delay', (i * 0.04) + 's');
+    cardEl.addEventListener('click', () => openLightbox(i, cardEl));
+    collectionGridEl.appendChild(cardEl);
+  });
+  body.style.background = '';
+  body.classList.remove(...ALL_TYPE_CLASSES);
+  body.classList.add('bg-home');
+  showView('collection');
+}
+
+function closeLightbox() {
+  lightboxEl.classList.remove('show');
+  lbCardEl.innerHTML = '';
+  lbFromEl = null;
+}
+
+function openLightbox(idx, fromEl) {
+  lbIdx = idx;
+  lbFromEl = fromEl || null;
+  lbCardEl.innerHTML = buildCardHTML(MASHUPS[idx], { showArt: true });
+  lightboxEl.classList.add('show');
+  lightboxEl.setAttribute('aria-hidden', 'false');
+
+  const cardEl = lbCardEl.firstElementChild;
+  if (!cardEl) return;
+
+  // Measure final (centered, scale 1.35 from CSS) rect
+  cardEl.style.transition = 'none';
+  cardEl.style.transform = '';
+  // The .lightbox-card .card rule applies scale(1.25) by default.
+  const finalRect = cardEl.getBoundingClientRect();
+
+  if (fromEl) {
+    // FLIP: animate from the clicked grid card's rect into the centered fullscreen card.
+    const fromRect = fromEl.getBoundingClientRect();
+    const fromCx = fromRect.left + fromRect.width  / 2;
+    const fromCy = fromRect.top  + fromRect.height / 2;
+    const toCx   = finalRect.left + finalRect.width  / 2;
+    const toCy   = finalRect.top  + finalRect.height / 2;
+    const dx = fromCx - toCx;
+    const dy = fromCy - toCy;
+    const s  = fromRect.width / finalRect.width; // both card widths
+    cardEl.style.transformOrigin = 'center center';
+    cardEl.style.transform = `translate(${dx}px, ${dy}px) scale(${s * 1.35})`;
+    cardEl.style.opacity = '0.85';
+    cardEl.offsetHeight;
+    cardEl.style.transition = 'transform 0.55s cubic-bezier(0.34, 1.18, 0.64, 1), opacity 0.3s ease';
+    cardEl.style.transform = 'scale(1.25)';
+    cardEl.style.opacity = '1';
+  } else {
+    cardEl.style.transform = 'scale(0.4)';
+    cardEl.style.opacity = '0';
+    cardEl.offsetHeight;
+    cardEl.style.transition = 'transform 0.45s cubic-bezier(0.34, 1.35, 0.64, 1), opacity 0.3s ease';
+    cardEl.style.transform = 'scale(1.25)';
+    cardEl.style.opacity = '1';
+  }
+}
+
+function lbNavigate(dir) {
+  const next = (lbIdx + dir + MASHUPS.length) % MASHUPS.length;
+  lbIdx = next;
+  const cardEl = lbCardEl.firstElementChild;
+  if (cardEl) {
+    cardEl.style.transition = 'transform 0.18s ease, opacity 0.18s ease';
+    cardEl.style.transform = `translateX(${dir * -24}px) scale(1.20)`;
+    cardEl.style.opacity = '0';
+  }
+  setTimeout(() => {
+    lbCardEl.innerHTML = buildCardHTML(MASHUPS[lbIdx], { showArt: true });
+    const ne = lbCardEl.firstElementChild;
+    if (ne) {
+      ne.style.transition = 'none';
+      ne.style.transform = `translateX(${dir * 24}px) scale(1.20)`;
+      ne.style.opacity = '0';
+      ne.offsetHeight;
+      ne.style.transition = 'transform 0.32s var(--ease-spring), opacity 0.25s ease';
+      ne.style.transform = 'scale(1.25)';
+      ne.style.opacity = '1';
+    }
+  }, 180);
+}
+
+/* =========================================================
+   EVENTS
+   ========================================================= */
+startBtn.addEventListener('click', handleStart);
+btnHint.addEventListener('click', handleHint);
+btnReveal.addEventListener('click', handleReveal);
+btnNext.addEventListener('click', handleNext);
+btnBack.addEventListener('click', handleBack);
+btnHome.addEventListener('click', () => {
+  body.style.background = '';
+  handleHomeReset();
+});
+btnFinalHome.addEventListener('click', () => {
+  body.style.background = '';
+  handleHomeReset();
+});
+btnCollection.addEventListener('click', openCollection);
+btnCollectionHome.addEventListener('click', () => {
+  body.style.background = '';
+  handleHomeReset();
+});
+
+/* Lightbox controls */
+lbPrev.addEventListener('click', (e) => { e.stopPropagation(); lbNavigate(-1); });
+lbNext.addEventListener('click', (e) => { e.stopPropagation(); lbNavigate( 1); });
+/* Click on the dark backdrop closes the lightbox back to the grid */
+lightboxEl.addEventListener('click', (e) => {
+  if (e.target === lightboxEl) closeLightbox();
+});
+
+document.addEventListener('keydown', (e) => {
+  // Lightbox has highest priority when open
+  if (lightboxEl.classList.contains('show')) {
+    if (e.key === 'Escape')      { closeLightbox(); return; }
+    if (e.key === 'ArrowLeft')   { lbNavigate(-1);  return; }
+    if (e.key === 'ArrowRight')  { lbNavigate( 1);  return; }
+    return;
+  }
+  if (state.busy) return;
+  // Collection grid view
+  if (viewCollection.classList.contains('active')) {
+    if (e.key === 'Escape') { body.style.background=''; handleHomeReset(); return; }
+    return;
+  }
+  if (state.phase === 'home') {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleStart(); }
+    else if (e.key === 'c' || e.key === 'C') { openCollection(); }
+    return;
+  }
+  if (state.phase === 'final') {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); body.style.background=''; handleHomeReset(); }
+    return;
+  }
+  if (e.key === 'Escape') { body.style.background=''; handleHomeReset(); return; }
+  if (e.key === 'ArrowLeft' && !btnBack.disabled) { handleBack(); return; }
+  if (state.phase === 'silhouette') {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'r' || e.key === 'R') { e.preventDefault(); handleReveal(); }
+    else if (e.key === 'i' || e.key === 'I' || e.key === 'h') { handleHint(); }
+    else if (e.key === 'ArrowRight') { /* no-op: must reveal */ }
+  } else if (state.phase === 'revealed') {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); handleNext(); }
+  }
+});
+
+/* =========================================================
+   INIT
+   ========================================================= */
+renderPokeballs();
+updateHud();
+window.addEventListener('resize', () => {
+  if (viewHome.classList.contains('active')) renderPokeballs();
+});
+</script>
+</body>
+</html>
