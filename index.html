@@ -175,11 +175,11 @@ img { display: block; max-width: 100%; }
   width: 100%; height: 100%;
   object-fit: contain;
   filter: drop-shadow(0 14px 30px rgba(0,0,0,0.25));
+  transition: filter 0.85s cubic-bezier(0.4, 0, 0.2, 1);
 }
-/* During morph: full coverage so the image lands edge-to-edge in the artwork zone */
+/* During morph: lighter shadow as the image settles into the card.
+   Keep object-fit: contain so the image just scales down (no crop swap). */
 .silhouette-stage.morphing img {
-  object-fit: cover;
-  border-radius: 0;
   filter: drop-shadow(0 4px 14px rgba(0,0,0,0.18));
 }
 .silhouette-stage.bounce {
@@ -352,12 +352,16 @@ img { display: block; max-width: 100%; }
 }
 .artwork::before {
   content: ''; position: absolute; inset: 3px;
-  border: 1px solid rgba(0,0,0,0.08); pointer-events: none; z-index: 2;
+  border: 1px solid rgba(0,0,0,0.08); pointer-events: none; z-index: 5;
 }
 .artwork img {
+  position: absolute;
+  inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
 }
+.artwork .artwork-bg { z-index: 1; }
+.artwork .artwork-fg { z-index: 3; }
 .artwork-placeholder { font-size: 13px; font-weight: 900; letter-spacing: 1.5px; text-align: center; }
 .artwork-subtitle { font-style: italic; font-size: 11px; color: #5A4F3A; margin-top: 7px; text-align: center; }
 .pokedex-bar {
@@ -461,10 +465,14 @@ img { display: block; max-width: 100%; }
   display: none;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 5vh 4vw;
+  padding: 4vh 4vw;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 .view-final.active { display: flex; opacity: 1; }
+.view-final .final-title { margin-top: auto; }
+.view-final > .cards-grid { margin-bottom: auto; }
 .final-title {
   font-family: 'Anton', sans-serif;
   font-size: clamp(48px, 6vw, 96px);
@@ -483,12 +491,13 @@ img { display: block; max-width: 100%; }
   font-style: italic;
 }
 .cards-grid {
-  margin-top: 36px;
+  margin-top: 28px;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, 150px);
   gap: 16px;
   perspective: 1200px;
-  max-width: 92vw;
+  max-width: 100%;
+  justify-content: center;
 }
 .cards-grid .card {
   width: 150px; height: 210px;
@@ -621,6 +630,24 @@ img { display: block; max-width: 100%; }
   animation: reveal-name-idle 2.4s ease-in-out infinite;
 }
 
+/* ============ FIREWORK STARS (reveal moment) ============ */
+.firework-burst {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+}
+.firework-star {
+  position: absolute;
+  line-height: 1;
+  user-select: none;
+  will-change: transform, opacity;
+  filter:
+    drop-shadow(0 0 6px rgba(255, 220, 90, 0.7))
+    drop-shadow(0 4px 10px rgba(0, 0, 0, 0.22));
+}
+
 /* ============ FALLBACK SILHOUETTE PLACEHOLDER ============ */
 .placeholder-silhouette {
   width: 100%; height: 100%;
@@ -728,18 +755,23 @@ body.bg-home       { background-color: #FFFFFF; }
 }
 .collection-grid-wrap {
   position: absolute;
-  inset: 100px 0 60px 0;
+  inset: 90px 0 30px 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 24px;
+  scrollbar-gutter: stable;
 }
 .collection-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, 165px);
   gap: 18px;
-  max-width: 92vw;
+  max-width: 100%;
   perspective: 1200px;
+  justify-content: center;
+  margin: auto;
 }
 .collection-grid .card {
   cursor: pointer;
@@ -894,7 +926,7 @@ body.bg-home       { background-color: #FFFFFF; }
 <section class="view view-collection" id="view-collection">
   <div class="collection-header">
     <div style="width:52px;"></div>
-    <div class="collection-title">Collection — 15 cartes</div>
+    <div class="collection-title">Collection — 16 cartes</div>
     <button class="nav-btn" id="btn-collection-home-top" type="button" aria-label="Accueil">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
     </button>
@@ -931,10 +963,10 @@ body.bg-home       { background-color: #FFFFFF; }
    ========================================================= */
 const MASHUPS = [
   { num:"01", pokemonBase:"Machoke", nomMashup:"Nicogneur", target:"Nico", type:"fighting", stage:"Stage 1", evolvesFrom:"Machop", hp:100, pokedexNumber:"0067", species:"Crossfit", height:"5'09\"", weight:"85 kg", attackCost:["fighting","fighting","colorless"], attackName:"WOD du Dimanche", attackDamage:80, attackText:"Inflige 20 dégâts de plus pour chaque shaker de whey attaché.", weakness:{type:"psychic",value:"+20"}, retreat:2, flavorText:"Il s'est mis au CrossFit pour fondre avant le mariage. Sa whey n'est jamais bien loin.", indices:["Pratique un sport intense","Donne tout pendant chaque séance, jusqu'à l'épuisement","Se complémente, il faut garder les muscles"] },
-  { num:"02", pokemonBase:"Ponyta", nomMashup:"Pimentita", target:"Nico", type:"fire", stage:"Basic", hp:70, pokedexNumber:"0077", species:"Sauce Piquante", height:"3'03\"", weight:"30 kg", attackCost:["fire","fire"], attackName:"Carolina Reaper", attackDamage:60, attackText:"L'Adversaire est désormais Brûlé. Lait fortement recommandé.", weakness:{type:"water",value:"+20"}, retreat:1, flavorText:"Sa crinière s'enflamme à chaque bouchée. Aucun palais humain ne peut suivre sa tolérance Scoville.", indices:["Galope quand il y a du feu sous les sabots","Adore la chaleur, encore plus si elle pique","A développé une tolérance Scoville hors-norme"] },
+  { num:"02", pokemonBase:"Ponyta", nomMashup:"Pimenta", target:"Nico", type:"fire", stage:"Basic", hp:70, pokedexNumber:"0077", species:"Sauce Piquante", height:"3'03\"", weight:"30 kg", attackCost:["fire","fire"], attackName:"Carolina Reaper", attackDamage:60, attackText:"L'Adversaire est désormais Brûlé. Lait fortement recommandé.", weakness:{type:"water",value:"+20"}, retreat:1, flavorText:"Sa crinière s'enflamme à chaque bouchée. Aucun palais humain ne peut suivre sa tolérance Scoville.", indices:["Galope quand il y a du feu sous les sabots","Adore la chaleur, encore plus si elle pique","A développé une tolérance Scoville hors-norme"] },
   { num:"03", pokemonBase:"Magneton", nomMashup:"Dispersaton", target:"Nico", type:"lightning", stage:"Stage 1", evolvesFrom:"Magnemite", hp:90, pokedexNumber:"0082", species:"Hyperactif", height:"3'03\"", weight:"60 kg", attackCost:["lightning","lightning","colorless"], attackName:"Dispersion Totale", attackDamage:70, attackText:"Ce Pokémon attaque dans 3 directions en même temps. Aucune défausse possible.", weakness:{type:"fighting",value:"+20"}, retreat:2, flavorText:"Trois cerveaux tournent en parallèle 24h/24 : Kings & Lords, AI et basket. Seule Claire peut le rappeler à l'ordre.", indices:["Plusieurs cerveaux qui tournent en parallèle","Cultive toutes les passions à la fois","Hyperactif, ne sait pas s'arrêter"] },
   { num:"04", pokemonBase:"Mr. Mime", nomMashup:"Mr. Daddy", target:"Nico", type:"psychic", stage:"Basic", hp:90, pokedexNumber:"0122", species:"Cringe-Mime", height:"4'03\"", weight:"55 kg", attackCost:["psychic","colorless"], attackName:"Jeu de Mot Cringe", attackDamage:40, attackText:"L'Adversaire est déstabilisé. +20 s'il est bon public.", weakness:{type:"psychic",value:"+20"}, retreat:1, flavorText:"« Vietnam ta touillette » — sa blague signature. Ça reste dans la tête.", indices:["Coincé dans une cage qui n'existe pas","Place une vanne à chaque ouverture","Pro des blagues de papa"] },
-  { num:"05", pokemonBase:"Smoochum", nomMashup:"Nipoutou", target:"Nico", type:"psychic", stage:"Basic", hp:80, pokedexNumber:"0238", species:"Designer", height:"1'04\"", weight:"13 kg", attackCost:["psychic","colorless"], attackName:"Coupe Yolo", attackDamage:30, attackText:"L'Adversaire est aveuglé. Qui est ce Pokémon en face de moi ?", weakness:{type:"psychic",value:"+20"}, retreat:2, flavorText:"Méconnaissable tous les 4 mois, à chaque passage chez le coiffeur-barbier.", indices:["Aime les bisous","T'as essayé l'argot ?","La coupe est en évolution"] },
+  { num:"05", pokemonBase:"Métamorph", nomMashup:"Nicomorph", target:"Nico", type:"colorless", stage:"Basic", hp:80, pokedexNumber:"0132", species:"Transformation", height:"1'00\"", weight:"4 kg", attackCost:["colorless","colorless"], attackName:"Coupe Yolo", attackDamage:30, attackText:"L'Adversaire ne reconnaît plus son Pokémon. Choisit un type au hasard à chaque tour.", weakness:{type:"fighting",value:"+20"}, retreat:1, flavorText:"Méconnaissable tous les 4 mois, à chaque passage chez le coiffeur-barbier.", indices:["Personne ne sait à quoi il ressemble vraiment","Peut tromper son monde d'un battement de cils","Une nouvelle apparence à chaque rencontre"] },
   { num:"06", pokemonBase:"Snorlax", nomMashup:"Grignoflex", target:"Nico", type:"colorless", stage:"Basic", hp:150, pokedexNumber:"0143", species:"Grignoteur", height:"6'11\"", weight:"90 kg", attackCost:["colorless","colorless","colorless"], attackName:"Frigo Ouvert", attackDamage:60, attackText:"Pioche 2 collations. Divisés par deux si Claire le surprend la main dans le sac.", weakness:{type:"fighting",value:"+20"}, retreat:4, flavorText:"Grignote avec gourmandise, a du mal à s'arrêter. Heureusement, les WOD le sauvent.", indices:["Gourmand","Ronfle","Inarrêtable"] },
   { num:"07", pokemonBase:"Muk", nomMashup:"Grostasdetrucs", target:"Nico", type:"darkness", stage:"Stage 1", evolvesFrom:"Grimer", hp:130, pokedexNumber:"0089", species:"Compulsif", height:"3'11\"", weight:"100 kg", attackCost:["darkness","darkness","colorless"], attackName:"Black Friday", attackDamage:70, attackText:"Chaque carte Pokémon, sauce piquante et objet collectionné ajoute +10.", weakness:{type:"fighting",value:"+20"}, retreat:3, flavorText:"Accumule plus vite qu'il ne consomme. Ses placards sont un musée de lubies passées.", indices:["Aime collectionner","Accumule, jusqu'à déborder","Il n'y a bientôt plus d'espace de stockage disponible"] },
   { num:"08", pokemonBase:"Scyther", nomMashup:"Inseclairteur", target:"Claire", type:"grass", stage:"Basic", hp:90, pokedexNumber:"0123", species:"Main Verte", height:"4'11\"", weight:"56 kg", attackCost:["grass","colorless"], attackName:"Pouce Vert", attackDamage:50, attackText:"Plante 3 fleurs à longue tige sur le terrain. +10 par fleur attachée.", weakness:{type:"fire",value:"+20"}, retreat:1, flavorText:"A déjà préparé des dizaines de pots de petites fleurs pour le mariage. Son bananier prospère, ses nénuphars aussi.", indices:["Le monde de l'infiniment petit","Peut couper tout ce qui dépasse pour relancer la croissance","L'outil indispensable quand on a la main verte"] },
@@ -942,9 +974,10 @@ const MASHUPS = [
   { num:"10", pokemonBase:"Omanyte", nomMashup:"Antiquitoss", target:"Claire", type:"water", stage:"Basic", hp:70, pokedexNumber:"0138", species:"Antiquaire", height:"1'04\"", weight:"8 kg", attackCost:["water","colorless"], attackName:"Attaque Surprise", attackDamage:40, attackText:"Plus c'est vieux, plus ça frappe fort. +20 par année d'ancienneté.", weakness:{type:"grass",value:"+20"}, retreat:1, flavorText:"Il ne manque que la piscine. En attendant, les distributeurs à boules suffisent à la remplir.", indices:["Mimi comme tout","D'une autre époque, plus c'est ancien mieux c'est","Obsession particulière : les boules"] },
   { num:"11", pokemonBase:"Togepi", nomMashup:"Togeclaire", target:"Claire", type:"fairy", stage:"Basic", hp:60, pokedexNumber:"0175", species:"Multi-Passions", height:"1'00\"", weight:"2 kg", attackCost:["fairy"], attackName:"« Alors ? »", attackDamage:30, attackText:"Regard insistant et plein de malice. « Bon, quand est-ce que vous faites des enfants ? » L'Adversaire est désormais Confus. +20 s'il est en couple.", weakness:{type:"metal",value:"+10"}, retreat:1, flavorText:"Éclot en révélant une nouvelle passion à chaque saison : plantes, insectes, yoga, déco, antiquités…", indices:["Plein de surprises, on ne sait jamais ce qui va sortir de la coquille","12 passions en parallèle","Veut des bébés, mais surtout dans son entourage"] },
   { num:"12", pokemonBase:"Ledyba", nomMashup:"Coxyclaire", target:"Claire", type:"grass", stage:"Basic", hp:50, pokedexNumber:"0165", species:"Maman-Coccinelle", height:"3'03\"", weight:"11 kg", attackCost:["grass"], attackName:"Pull Moche", attackDamage:30, attackText:"L'Adversaire est désormais vêtu d'un pull moche de Noël devant tous les autres en costards. Il est Confus.", weakness:{type:"fire",value:"+20"}, retreat:1, flavorText:"Avec Nico, ils ont accueilli tout le monde en pulls moches pour les emmener à leur vrai mariage à la mairie. Iconique.", indices:["Petite bête mignonne","On peut deviner son âge en comptant ses points","Pro de l'organisation de Secret Santa"] },
-  { num:"13", pokemonBase:"Alakazam", nomMashup:"Alakaclaire", target:"Claire", type:"psychic", stage:"Stage 2", evolvesFrom:"Kadabra", hp:130, pokedexNumber:"0065", species:"Stratège", height:"4'11\"", weight:"48 kg", attackCost:["psychic","colorless","colorless"], attackName:"Calcul Mental", attackDamage:60, attackText:"Anticipe 3 coups d'avance. Connaît tous les gossips avant tout le monde. +30 si jeu de société en cours.", weakness:{type:"psychic",value:"+20"}, retreat:2, flavorText:"QI redoutable, mémoire des ragots infaillible. À Noël, elle a déjà gagné le Time's Up avant la 2e manche.", indices:["Comme un air de magie","Toujours 3 coups d'avance","Surnommé l'architecte"] },
+  { num:"13", pokemonBase:"Alakazam", nomMashup:"Alaklaire", target:"Claire", type:"psychic", stage:"Stage 2", evolvesFrom:"Kadabra", hp:130, pokedexNumber:"0065", species:"Stratège", height:"4'11\"", weight:"48 kg", attackCost:["psychic","colorless","colorless"], attackName:"Calcul Mental", attackDamage:60, attackText:"Anticipe 3 coups d'avance. Connaît tous les gossips avant tout le monde. +30 si jeu de société en cours.", weakness:{type:"psychic",value:"+20"}, retreat:2, flavorText:"QI redoutable, mémoire des ragots infaillible. À Noël, elle a déjà gagné le Time's Up avant la 2e manche.", indices:["Comme un air de magie","Toujours 3 coups d'avance","Surnommé l'architecte"] },
   { num:"14", pokemonBase:"Hitmonlee", nomMashup:"Kiclaire", target:"Claire", type:"fighting", stage:"Basic", hp:100, pokedexNumber:"0106", species:"Yoga Master", height:"5'11\"", weight:"55 kg", attackCost:["fighting","fighting"], attackName:"Posture du Pigeon Royal", attackDamage:70, attackText:"Pose impossible. L'Adversaire est désormais Étonné. +20 si l'Adversaire est moins souple.", weakness:{type:"psychic",value:"+20"}, retreat:2, flavorText:"Enchaîne les postures impossibles avec un calme déconcertant. Personne ne comprend comment elle fait.", indices:["Un coup de pied légendaire","Souplesse hors du commun","Yoga power !"] },
-  { num:"15", pokemonBase:"Famille Nidoran", nomMashup:"La Famille Nido", target:"Couple+Filles", type:"fairy", stage:"Family", hp:999, pokedexNumber:"0033", species:"Mariage", height:"—", weight:"—", attackCost:["fairy","fairy","colorless"], attackName:"Oui, Je Le Veux", attackDamage:1000, attackText:"Évolution finale du couple Pokémon canonique. Cap sur Domont, en Tesla Model Y, avec deux Nidoran à l'arrière.", weakness:{type:"psychic",value:"—"}, retreat:0, flavorText:"Ensemble depuis 14 ans, Pomme (5) et Dune (4) en évolutions. Cette année : forme finale.", indices:["Un troupeau, comme les Addams","À des cornes préhistoriques","Deux parents évolués au maximum, deux petits encore à leur forme de base"] }
+  { num:"15", pokemonBase:"Houndoom", nomMashup:"Démoclaire", target:"Claire", type:"darkness", stage:"Stage 1", evolvesFrom:"Houndour", hp:110, pokedexNumber:"0229", species:"Compétitive", height:"4'07\"", weight:"35 kg", attackCost:["darkness","darkness","colorless"], attackName:"Pas De Quartier", attackDamage:80, attackText:"L'Adversaire est désormais Vaincu. Inflige +20 dégâts pour chaque blessure auto-infligée.", weakness:{type:"fighting",value:"+20"}, retreat:1, flavorText:"Mode chasse activé dès qu'un jeu commence. Elle a perdu un doigt aux olympiades, mais ça valait le coup.", indices:["Montre les crocs","Que trépasse si je faiblis","Révèle sa facette démoniaque"] },
+  { num:"16", pokemonBase:"Famille Nidoran", nomMashup:"La Famille Nido", target:"Couple+Filles", type:"fairy", stage:"Family", hp:999, pokedexNumber:"0033", species:"Mariage", height:"—", weight:"—", attackCost:["fairy","fairy","colorless"], attackName:"Oui, Je Le Veux", attackDamage:1000, attackText:"Évolution finale du couple Pokémon canonique. Cap sur Domont, en Tesla Model Y, avec deux Nidoran à l'arrière.", weakness:{type:"psychic",value:"—"}, retreat:0, flavorText:"Ensemble depuis 14 ans, Pomme (5) et Dune (4) en évolutions. Cette année : forme finale.", indices:["Un troupeau, comme les Addams","À des cornes préhistoriques","Deux parents évolués au maximum, deux petits encore à leur forme de base"] }
 ];
 
 const ENERGY_ICONS = {
@@ -973,7 +1006,14 @@ let state = {
 /* =========================================================
    HELPERS
    ========================================================= */
-function slug(s) { return s.toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function slug(s) {
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -1000,7 +1040,7 @@ function buildOrder() {
     else                                       pickNico = Math.random() < 0.5;
     out.push((pickNico ? nico : claire).shift());
   }
-  out.push(MASHUPS.find(m => m.num === '15'));
+  out.push(MASHUPS.find(m => m.target === 'Couple+Filles'));
   return out;
 }
 
@@ -1020,10 +1060,13 @@ function buildCardHTML(m, opts) {
       <div class="evolves-from">Evolves from ${m.evolvesFrom}</div>
     </div>` : '';
 
+  const s = slug(m.nomMashup);
   const artInner = showArt
-    ? `<img src="images/mashups/${slug(m.nomMashup)}.png" alt="${m.nomMashup}"
-              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-       <div class="artwork-placeholder-wrap" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; flex-direction:column;">
+    ? `<img class="artwork-bg" src="images/backgrounds/${s}.png" alt=""
+              onerror="this.style.display='none';">
+       <img class="artwork-fg" src="images/revealed/${s}.png" alt="${m.nomMashup}"
+              onerror="this.style.display='none'; const ph=this.parentElement.querySelector('.artwork-placeholder-wrap'); if(ph) ph.style.display='flex';">
+       <div class="artwork-placeholder-wrap" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; flex-direction:column; z-index:2;">
          <div class="artwork-placeholder">[ MONTAGE PHOTO ]</div>
          <div class="artwork-subtitle">${m.pokemonBase}<br>+ ${m.target}</div>
        </div>`
@@ -1091,7 +1134,7 @@ function buildCardHTML(m, opts) {
 /* Silhouette image element with placeholder fallback */
 function silhouetteHTML(m) {
   return `
-    <img src="images/silhouettes/${slug(m.nomMashup)}.png"
+    <img src="images/shapes/${slug(m.nomMashup)}.png"
          alt="Silhouette mystère"
          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
          draggable="false">
@@ -1106,11 +1149,10 @@ function silhouetteHTML(m) {
 
 function revealedHeroHTML(m) {
   return `
-    <img src="images/mashups/${slug(m.nomMashup)}.png"
+    <img src="images/revealed/${slug(m.nomMashup)}.png"
          alt="${m.nomMashup}"
          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-         draggable="false"
-         style="border-radius:18px; box-shadow:0 18px 42px rgba(0,0,0,0.32);">
+         draggable="false">
     <div class="placeholder-revealed" style="display:none;">
       <div class="ph-name">${m.nomMashup}</div>
       <div class="ph-sub">${m.pokemonBase} + ${m.target}</div>
@@ -1426,6 +1468,77 @@ function handleHint() {
 /* =========================================================
    FLOW: REVEAL
    ========================================================= */
+/* Fireworks burst — particle system with gravity + spin matching trajectory.
+   Stars spawn at (cx, cy), scale-in, then arc outward and fade out. */
+function launchFireworks(cx, cy) {
+  const burst = document.createElement('div');
+  burst.className = 'firework-burst';
+  viewGame.appendChild(burst);
+
+  const STAR_COUNT = 24;
+  const LIFE = 1500;   // ms
+  const G    = 1500;   // px/s² gravity
+  const stars = [];
+
+  for (let i = 0; i < STAR_COUNT; i++) {
+    // Even radial spread with a little jitter so it doesn't look mechanical
+    const baseAngle = (Math.PI * 2 / STAR_COUNT) * i;
+    const angle     = baseAngle + (Math.random() - 0.5) * 0.55;
+    const speed     = 360 + Math.random() * 420;
+    const vx        = Math.cos(angle) * speed;
+    const vy        = Math.sin(angle) * speed;
+    // Spin in the natural direction of the trajectory (matches horizontal sign)
+    const rotSign    = vx >= 0 ? 1 : -1;
+    const rotSpeed   = rotSign * (240 + Math.random() * 360); // deg/s
+    const initialRot = Math.random() * 360;
+    const size       = 22 + Math.random() * 22;
+
+    const el = document.createElement('div');
+    el.className = 'firework-star';
+    el.textContent = '⭐';
+    el.style.left = cx + 'px';
+    el.style.top  = cy + 'px';
+    el.style.fontSize = size + 'px';
+    el.style.transform = `translate(-50%, -50%) rotate(${initialRot}deg) scale(0)`;
+    el.style.opacity = '0';
+    burst.appendChild(el);
+
+    stars.push({ el, vx, vy, initialRot, rotSpeed });
+  }
+
+  const start = performance.now();
+  function frame(now) {
+    const elapsed = now - start;
+    if (elapsed >= LIFE) { burst.remove(); return; }
+    const t = elapsed / 1000;
+    const p = elapsed / LIFE;
+
+    let scale, opacity;
+    if (p < 0.14) {
+      const q = p / 0.14;
+      scale = q;
+      opacity = q;
+    } else if (p < 0.65) {
+      scale = 1;
+      opacity = 1;
+    } else {
+      const q = (p - 0.65) / 0.35;
+      scale   = 1 - q * 0.2;
+      opacity = 1 - q;
+    }
+
+    for (const s of stars) {
+      const x = s.vx * t;
+      const y = s.vy * t + 0.5 * G * t * t;
+      const r = s.initialRot + s.rotSpeed * t;
+      s.el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${r}deg) scale(${scale})`;
+      s.el.style.opacity   = opacity;
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
 function handleReveal() {
   if (state.busy) return;
   if (state.phase !== 'silhouette') return;
@@ -1440,11 +1553,38 @@ function handleReveal() {
   hintsEl.style.transition = 'opacity 0.35s ease';
   hintsEl.style.opacity = '0';
 
-  // ---- Phase 1: swap silhouette to revealed, pop scale, float name above ----
+  // ---- Phase 1: cross-fade silhouette → revealed, pop scale, fireworks burst ----
   silStage.classList.remove('bounce', 'enter', 'reveal-idle');
-  silStage.innerHTML = revealedHeroHTML(m);
+
+  // Capture silhouette center BEFORE anything mutates the DOM/transform.
+  const silRect = silStage.getBoundingClientRect();
+  const fxCx = silRect.left + silRect.width  / 2;
+  const fxCy = silRect.top  + silRect.height / 2;
+
+  // Fade out whatever is currently in silStage (silhouette img or its placeholder).
+  Array.from(silStage.children).forEach(el => {
+    el.style.transition = 'opacity 0.45s ease';
+    el.style.opacity = '0';
+  });
+
+  // Overlay the revealed image on top, ready to fade in over the silhouette.
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:absolute; inset:0; opacity:0; transition: opacity 0.45s ease;';
+  overlay.innerHTML = revealedHeroHTML(m);
+  silStage.appendChild(overlay);
+
   silStage.offsetHeight;
   silStage.classList.add('reveal-pop');
+  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+  // Fireworks come from behind the shape (z-index 3, silStage is z-4)
+  launchFireworks(fxCx, fxCy);
+
+  // After the cross-fade settles, collapse silStage to a single-child structure
+  // so subsequent phases (idle, morph) operate on a clean DOM.
+  setTimeout(() => {
+    silStage.innerHTML = revealedHeroHTML(m);
+  }, 500);
 
   // Build the floating name (above the silhouette, fades in slightly after pop)
   let nameEl = document.getElementById('reveal-name');
@@ -1471,18 +1611,26 @@ function handleReveal() {
   silStage.addEventListener('animationend', onPopEnd);
 
   setTimeout(() => {
-    // ---- Phase 2: morph — image + name both land into their card slots
-    //               while the card frame scales up to its final size ----
+    // ---- Phase 2: morph — image + name both land into their card slots ----
+
+    // 0) Capture the CURRENT visual rects (with the idle scale 1.10 still
+    //    applied) BEFORE removing animation classes — otherwise the silStage
+    //    snaps back to its natural scale 1.0 and we get a visible jump.
+    const cur       = silStage.getBoundingClientRect();
+    const nameStart = nameEl.getBoundingClientRect();
+
     silStage.removeEventListener('animationend', onPopEnd);
     silStage.classList.remove('reveal-pop', 'reveal-idle');
     nameEl.classList.remove('idle');
 
-    // 1) Mount the card at its FINAL state so we can measure target rects.
+    // 1) Mount the card at its FINAL visual state. No fade, no scale anim —
+    //    the card is just there as the background. The hero is what scales
+    //    down into it.
     cardStage.innerHTML = buildCardHTML(m, { showArt: true });
     cardStage.classList.add('show');
     cardStage.classList.remove('enter', 'bounce', 'exit');
     cardStage.style.transition = 'none';
-    cardStage.style.opacity = '0';
+    cardStage.style.opacity   = '1';
     cardStage.style.transform = 'translate(-50%, -50%) scale(1)';
     cardStage.offsetHeight;
 
@@ -1491,21 +1639,25 @@ function handleReveal() {
     const target     = artworkEl.getBoundingClientRect();
     const nameTarget = cardNameEl.getBoundingClientRect();
 
-    // 2) Hide the card's embedded image + name during the morph; the floating
-    //    hero + name become the visible elements landing into their frames.
-    const cardArtImg = cardStage.querySelector('.artwork img');
-    const cardArtPh  = cardStage.querySelector('.artwork-placeholder-wrap');
-    if (cardArtImg)  cardArtImg.style.opacity = '0';
-    if (cardArtPh)   cardArtPh.style.opacity  = '0';
+    // 2) Hide the card's foreground revealed image + name during the morph;
+    //    keep the background image visible so the flying hero lands ON TOP
+    //    of the pre-installed background (the morph "fills in" the artwork).
+    const cardArtFg = cardStage.querySelector('.artwork-fg');
+    const cardArtPh = cardStage.querySelector('.artwork-placeholder-wrap');
+    if (cardArtFg) cardArtFg.style.opacity = '0';
+    if (cardArtPh) cardArtPh.style.opacity = '0';
     cardNameEl.style.opacity = '0';
 
-    // 3) Freeze silStage at its current visual rect (fixed positioning).
-    const cur = silStage.getBoundingClientRect();
+    // 3) Freeze silStage at its CURRENT VISUAL rect (the idle-scaled one).
+    //    Bump z-index above the card (which sits later in the DOM at the same
+    //    z-index 4) so the morphing hero stays VISIBLE on top of the card —
+    //    otherwise the card covers it and the hero appears to vanish.
     silStage.classList.add('morphing');
     silStage.style.transition = 'none';
     silStage.style.transform  = 'none';
     silStage.style.margin     = '0';
     silStage.style.position   = 'fixed';
+    silStage.style.zIndex     = '8';
     silStage.style.top        = cur.top    + 'px';
     silStage.style.left       = cur.left   + 'px';
     silStage.style.width      = cur.width  + 'px';
@@ -1513,7 +1665,6 @@ function handleReveal() {
 
     // 4) FLIP for the name: snap to final state (matching card's name style)
     //    and apply inverse transform so it visually stays in its current spot.
-    const nameStart = nameEl.getBoundingClientRect();
     const cardNameStyle = window.getComputedStyle(cardNameEl);
     nameEl.style.transition = 'none';
     nameEl.style.animation  = 'none';
@@ -1535,18 +1686,21 @@ function handleReveal() {
     nameEl.style.transform = `translate(${ndx}px, ${ndy}px) scale(${nsx})`;
     nameEl.offsetHeight;
 
-    // 5) Card: snap to gentler starting scale (0.92) — soft entrance, no jump.
-    cardStage.style.transform = 'translate(-50%, -50%) scale(0.92)';
+    // 5) Snap the card to its starting state: scaled down + transparent.
+    //    It will scale-in + fade-in (opposite direction of the hero & name).
+    cardStage.style.transform = 'translate(-50%, -50%) scale(0.55)';
+    cardStage.style.opacity   = '0';
     cardStage.offsetHeight;
 
-    // 6) Trigger all three transitions in lockstep on the next paint frame.
+    // 6) Trigger card + hero + name transitions in lockstep on the next paint.
+    //    Card grows IN while hero & name scale DOWN — they converge together.
     requestAnimationFrame(() => {
       const ease = 'cubic-bezier(0.4, 0, 0.2, 1)';
       const dur  = '0.85s';
 
-      cardStage.style.transition = `transform ${dur} ${ease}, opacity 0.6s ease`;
-      cardStage.style.opacity   = '1';
-      cardStage.style.transform = 'translate(-50%, -50%) scale(1)';
+      cardStage.style.transition = `transform ${dur} ${ease}, opacity ${dur} ${ease}`;
+      cardStage.style.transform  = 'translate(-50%, -50%) scale(1)';
+      cardStage.style.opacity    = '1';
 
       silStage.style.transition =
         `top ${dur} ${ease}, left ${dur} ${ease}, width ${dur} ${ease}, height ${dur} ${ease}`;
@@ -1560,9 +1714,10 @@ function handleReveal() {
     });
 
     setTimeout(() => {
-      // 7) Morph done. Show the card's own image + name; retire the hero overlay.
-      if (cardArtImg) cardArtImg.style.opacity = '';
-      if (cardArtPh)  cardArtPh.style.opacity  = '';
+      // 7) Morph done. Reveal the card's own foreground image + name;
+      //    retire the floating hero overlay.
+      if (cardArtFg) cardArtFg.style.opacity = '';
+      if (cardArtPh) cardArtPh.style.opacity = '';
       cardNameEl.style.opacity = '';
 
       if (nameEl && nameEl.parentElement) nameEl.parentElement.removeChild(nameEl);

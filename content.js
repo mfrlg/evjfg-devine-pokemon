@@ -37,7 +37,7 @@ module.exports = [
   {
     num: "02",
     pokemonBase: "Ponyta",
-    nomMashup: "Pimentita",
+    nomMashup: "Pimenta",
     target: "Nico",
     type: "fire",
     stage: "Basic",
@@ -112,27 +112,27 @@ module.exports = [
   },
   {
     num: "05",
-    pokemonBase: "Smoochum",
-    nomMashup: "Nipoutou",
+    pokemonBase: "Métamorph",
+    nomMashup: "Nicomorph",
     target: "Nico",
-    type: "psychic",
+    type: "colorless",
     stage: "Basic",
     hp: 80,
-    pokedexNumber: "0238",
-    species: "Designer",
-    height: "1'04\"",
-    weight: "13 kg",
-    attackCost: ["psychic", "colorless"],
+    pokedexNumber: "0132",
+    species: "Transformation",
+    height: "1'00\"",
+    weight: "4 kg",
+    attackCost: ["colorless", "colorless"],
     attackName: "Coupe Yolo",
     attackDamage: 30,
-    attackText: "L'Adversaire est aveuglé. Qui est ce Pokémon en face de moi ?",
-    weakness: { type: "psychic", value: "+20" },
-    retreat: 2,
+    attackText: "L'Adversaire ne reconnaît plus son Pokémon. Choisit un type au hasard à chaque tour.",
+    weakness: { type: "fighting", value: "+20" },
+    retreat: 1,
     flavorText: "Méconnaissable tous les 4 mois, à chaque passage chez le coiffeur-barbier.",
     indices: [
-      "Aime les bisous",
-      "T'as essayé l'argot ?",
-      "La coupe est en évolution"
+      "Personne ne sait à quoi il ressemble vraiment",
+      "Peut tromper son monde d'un battement de cils",
+      "Une nouvelle apparence à chaque rencontre"
     ]
   },
   {
@@ -317,7 +317,7 @@ module.exports = [
   {
     num: "13",
     pokemonBase: "Alakazam",
-    nomMashup: "Alakaclaire",
+    nomMashup: "Alaklaire",
     target: "Claire",
     type: "psychic",
     stage: "Stage 2",
@@ -365,10 +365,36 @@ module.exports = [
       "Yoga power !"
     ]
   },
+  {
+    num: "15",
+    pokemonBase: "Houndoom",
+    nomMashup: "Démoclaire",
+    target: "Claire",
+    type: "darkness",
+    stage: "Stage 1",
+    evolvesFrom: "Houndour",
+    hp: 110,
+    pokedexNumber: "0229",
+    species: "Compétitive",
+    height: "4'07\"",
+    weight: "35 kg",
+    attackCost: ["darkness", "darkness", "colorless"],
+    attackName: "Pas De Quartier",
+    attackDamage: 80,
+    attackText: "L'Adversaire est désormais Vaincu. Inflige +20 dégâts pour chaque blessure auto-infligée.",
+    weakness: { type: "fighting", value: "+20" },
+    retreat: 1,
+    flavorText: "Mode chasse activé dès qu'un jeu commence. Elle a perdu un doigt aux olympiades, mais ça valait le coup.",
+    indices: [
+      "Montre les crocs",
+      "Que trépasse si je faiblis",
+      "Révèle sa facette démoniaque"
+    ]
+  },
 
   // =========== FINALE FAMILLE ===========
   {
-    num: "15",
+    num: "16",
     pokemonBase: "Famille Nidoran",
     nomMashup: "La Famille Nido",
     target: "Couple+Filles",

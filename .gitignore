@@ -4,3 +4,8 @@ node_modules/
 .vscode/
 .idea/
 .claude/
+
+# Working files (originals, partial drafts) — already integrated into index.html / content.js
+Assets/
+democlaire.js
+nicomorph.js
